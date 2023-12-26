@@ -11,6 +11,7 @@
 #include "tileset.h"
 #include "noisemap.h"
 #include "room.h"
+#include "world.h"
 
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
@@ -102,7 +103,7 @@ void loop() {
   //int ok = get_simple_noisemap3d(noisemap2d, 0, counter, 0, MAP_W, MAP_H, 0, 0.3);
 
   if (counter % 10 == 0) {
-    setup_room(room_wallmap, room_tilemap, 0, 0, world_tile_data, 0, 0, 1 + ((counter / 10) % 15), counter);
+    setup_room(room_wallmap, room_tilemap, 0, 0, world_tile_data, 0, 0, get_room_exits(0, 0), counter);
   }
 
   int value = 0;

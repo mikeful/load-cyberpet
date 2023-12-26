@@ -10,10 +10,12 @@
 #define MAP_H 14
 #endif
 
+#ifndef EXIT_N
 #define EXIT_N 1
 #define EXIT_E 2
 #define EXIT_S 4
 #define EXIT_W 8
+#endif
 
 #define ROOM_FLOOR 0
 #define ROOM_WALL 1
