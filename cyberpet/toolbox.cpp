@@ -32,3 +32,11 @@ String format_number(unsigned long amount) {
 
   return parsed_amount;
 }
+
+int mod(int x, int y) {
+  if (x < 0) {
+    return ((x + 1) % y) + (y - 1);
+  } else {
+    return x % y;
+  }
+}

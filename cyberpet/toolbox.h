@@ -4,5 +4,6 @@
 #include "Arduino.h"
 
 String format_number(unsigned long amount);
+int mod(int x, int y);
 
 #endif

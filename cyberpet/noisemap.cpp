@@ -204,13 +204,13 @@ int get_simple_noisemap3d(byte noisemap2d[MAP_W][MAP_H], int pos_x, int pos_y, i
 // .\./.\./.\./.
 // --Y---Y---Y--
 bool is_triangle_grid_node(int check_x, int check_y, int grid_size) {
-  if (check_x % grid_size == 0 and check_y % grid_size == 0) {
+  if (mod(check_x, grid_size) == 0 and mod(check_y, grid_size) == 0) {
     return true;
   }
 
   int half_grid = grid_size / 2;
-  if ((check_x + half_grid) % grid_size == 0
-    && (check_y + half_grid) % grid_size == 0
+  if (mod((check_x + half_grid), grid_size) == 0
+    && mod((check_y + half_grid), grid_size) == 0
   ) {
     return true;
   }
@@ -222,7 +222,7 @@ bool is_poi_big(int world_x, int world_y, int tile_value, int poi_prob, int poi_
   // poi_grid_size 24
   if (tile_value < poi_prob) {
     return false;
-  }  
+  }
 
   if (is_triangle_grid_node(world_x, world_y, poi_grid_size)) {
     return true;
@@ -486,14 +486,6 @@ unsigned int get_world_draw_tile(int world_tile_data[15]) {
 
 byte get_room_exits(int world_x, int world_y) {
   return world_tile_exit_patterns[
-    world_x % 4 + (4 * (world_y % 4))
+    mod(world_x, 4) + (4 * mod(world_y, 4))
   ];
-}
-
-unsigned int get_room_level(int world_x, int world_y) {
-  return 1 + abs(world_x) + abs(world_y);
-}
-
-unsigned int get_room_level(int world_x, int world_y, int world_z) {
-  return 1 + abs(world_x) + abs(world_y) + (abs(world_z) * 3);
 }

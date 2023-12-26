@@ -11,6 +11,7 @@
 
 #include "Arduino.h"
 #include "squirrel_hash.h"
+#include "toolbox.h"
 
 #define HEIGHT_DEEP_SEA 0
 #define HEIGHT_SEA 1
@@ -121,7 +122,5 @@ int get_world_tile(int tile_data[15], int world_x, int world_y, int time_step, u
 
 unsigned int get_world_draw_tile(int world_tile_data[15]);
 byte get_room_exits(int world_x, int world_y);
-unsigned int get_room_level(int world_x, int world_y);
-unsigned int get_room_level(int world_x, int world_y, int world_z);
 
 #endif
