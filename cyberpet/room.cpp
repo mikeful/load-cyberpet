@@ -196,3 +196,99 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
 
   return 1;
 }
+
+bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], unsigned int tile_x, unsigned int tile_y) {
+  switch(wall_map[tile_x][tile_y] ) {
+    case ROOM_FLOOR:
+    case ROOM_EXIT_N:
+    case ROOM_EXIT_E:
+    case ROOM_EXIT_S:
+    case ROOM_EXIT_W:
+      // Goal ok
+      return true;
+    default:
+      // Goal is not reachable
+      return false;
+  }
+}
+
+int clear_djikstra_map(int djikstra_map[MAP_W][MAP_H]) {
+  for (int i = 0; i < MAP_W; i++) {
+    for (int j = 0; j < MAP_H; j++) {
+      djikstra_map[i][j] = DJIKSTRA_MAX;
+    }
+  }
+
+  return 1;
+}
+
+int get_djikstra_value(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
+  if (tile_x < 0 || tile_x > MAP_W) { return DJIKSTRA_MAX; }
+  if (tile_y < 0 || tile_y > MAP_H) { return DJIKSTRA_MAX; }
+
+  return djikstra_map[tile_x][tile_y];
+}
+
+int get_djikstra_lowest(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
+  int tile_value = DJIKSTRA_MAX;
+  int current_lowest = DJIKSTRA_MAX;
+
+  tile_value = get_djikstra_value(djikstra_map, tile_x - 1, tile_y);
+  if (tile_value < current_lowest) {current_lowest = tile_value;}
+  tile_value = get_djikstra_value(djikstra_map, tile_x + 1, tile_y);
+  if (tile_value < current_lowest) {current_lowest = tile_value;}
+  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y - 1);
+  if (tile_value < current_lowest) {current_lowest = tile_value;}
+  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y + 1);
+  if (tile_value < current_lowest) {current_lowest = tile_value;}
+
+  return current_lowest;
+}
+
+int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], unsigned int goal_x, unsigned int goal_y) {
+  // Clear current map
+  clear_djikstra_map(djikstra_map);
+
+  // Sanity check that goal is not inside a wall
+  if (!room_tile_walkable(wall_map, goal_x, goal_y)) {
+    return 0;
+  }
+
+  // Set goal tile value
+  djikstra_map[goal_x][goal_y] = 0;
+
+  // Calculate map tile values
+  bool map_changed = true;
+  int neighbour_value = DJIKSTRA_MAX;
+
+  while (map_changed) {
+    map_changed = false;
+
+    for (int i = 0; i < MAP_W; i++) {
+      for (int j = 0; j < MAP_H; j++) {
+        if (room_tile_walkable(wall_map, i, j)) {
+          neighbour_value = get_djikstra_lowest(djikstra_map, i, j);
+
+          if (djikstra_map[i][j] > neighbour_value + 1) {
+            djikstra_map[i][j] = neighbour_value + 1;
+            map_changed = true;
+          }
+        }
+      }
+    }
+  }
+
+  return 1;
+}
+
+int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]) {
+  for (int i = 0; i < MAP_W; i++) {
+    for (int j = 0; j < MAP_H; j++) {
+      if (input1_map[i][j] < output_map[i][j]) {
+        output_map[i][j] = input1_map[i][j];
+      }
+    }
+  }
+
+  return 1;
+}

@@ -16,6 +16,13 @@
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
 
+byte room_exits = 0;
+int room_exit_map[MAP_W][MAP_H];
+int room_exitn_map[MAP_W][MAP_H];
+int room_exite_map[MAP_W][MAP_H];
+int room_exits_map[MAP_W][MAP_H];
+int room_exitw_map[MAP_W][MAP_H];
+
 int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
 
@@ -33,6 +40,7 @@ float XS = 0.0025;
 Adafruit_SSD1306 display1(128, 64, &Wire, 21, 500000UL);
 
 void setup() {
+  // Setup display
   Wire.begin(17, 18);
   display1.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display1.setRotation(1);
@@ -40,6 +48,7 @@ void setup() {
   display1.clearDisplay();
   display1.display();
 
+  // Setup 8x8 bitmap font
   display1.setFont(&medievalish_chonker_mono_Font);
   display1.setTextSize(1);
   display1.setTextColor(SSD1306_WHITE);
@@ -47,15 +56,19 @@ void setup() {
   display1.setTextWrap(false);
   //display1.cp437(true);
 
-  // Battery stuff
+  // Setup battery
   pinMode(ADC_Ctrl, OUTPUT); // pin 37
   pinMode(VBAT_Read, INPUT); // pin 1
   adcAttachPin(VBAT_Read); // default ADC_11db
   analogReadResolution(12);
 
+  //Serial.begin(115200);
+
+  // Setup game
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
       room_wallmap[i][j] = 0;
+      room_tilemap[i][j] = 0;
     }
   }
 
@@ -96,14 +109,25 @@ void loop() {
   display1->drawString(32, 15, String(progress) + "%");
   display1->setTextAlignment(TEXT_ALIGN_CENTER);
   display1->drawString(32, 5, String(floatVoltage) + "V");
-*/
+  */
 
   // Map stuff
   //int ok = get_simple_noisemap(noisemap2d, 0, counter, MAP_W, MAP_H, 0, 0.3);
   //int ok = get_simple_noisemap3d(noisemap2d, 0, counter, 0, MAP_W, MAP_H, 0, 0.3);
 
-  if (counter % 10 == 0) {
-    setup_room(room_wallmap, room_tilemap, 0, 0, world_tile_data, 0, 0, get_room_exits(0, 0), counter);
+  if (counter % 50 == 0) {
+    room_exits = get_room_exits(0, 0);
+    setup_room(room_wallmap, room_tilemap, 0, 0, world_tile_data, 0, 0, room_exits, counter);
+    build_djikstra_map(room_exitn_map, room_wallmap, 4, 0);
+    build_djikstra_map(room_exits_map, room_wallmap, 4, MAP_H - 1);
+    build_djikstra_map(room_exitw_map, room_wallmap, 0, 7);
+    build_djikstra_map(room_exite_map, room_wallmap, MAP_W - 1, 7);
+
+    clear_djikstra_map(room_exit_map);
+    if (room_exits & EXIT_N) { merge_djikstra_maps(room_exit_map, room_exitn_map); }
+    if (room_exits & EXIT_S) { merge_djikstra_maps(room_exit_map, room_exits_map); }
+    if (room_exits & EXIT_W) { merge_djikstra_maps(room_exit_map, room_exitw_map); }
+    if (room_exits & EXIT_E) { merge_djikstra_maps(room_exit_map, room_exite_map); }
   }
 
   int value = 0;
@@ -111,8 +135,16 @@ void loop() {
 
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
-      tile = room_tilemap[i][j];
-      display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+      //tile = room_tilemap[i][j];
+      //display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+
+      if (room_exit_map[i][j] < 50) {
+        display1.setCursor(i * 8, 8 + (j * 8));
+        display1.println(String(min(room_exit_map[i][j], 15), HEX));
+      } else {
+        tile = room_tilemap[i][j];
+        //display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+      }
     }
   }
 
@@ -199,8 +231,11 @@ void loop() {
 
   display1.setCursor(0, 120);
   display1.println(">" + String(map_min));
-  display1.setCursor(0, 128);
+  display1.setCursor(32, 120);
   display1.println("<" + String(map_max));
+
+  display1.setCursor(0, 128);
+  display1.println(format_number(counter));
 
   // write the buffer to the display
   display1.display();

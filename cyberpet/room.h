@@ -35,10 +35,17 @@
 #define ROOM_PILLAR9 19
 #define ROOM_PILLAR10 20
 
+#define DJIKSTRA_MAX 255
+
 #ifndef ROOM_H
 #define ROOM_H
 
 int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int world_x, int world_y, int world_tile_data[15], int area_x, int area_y, byte exits, unsigned int seed);
-int build_djikstra_map(byte djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], unsigned int seed);
+bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], unsigned int tile_x, unsigned int tile_y);
+
+int clear_djikstra_map(int djikstra_map[MAP_W][MAP_H]);
+int get_djikstra_lowest(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y);
+int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], unsigned int goal_x, unsigned int goal_y);
+int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]);
 
 #endif
