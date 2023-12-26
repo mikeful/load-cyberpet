@@ -14,6 +14,8 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
     }
   }
 
+  int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed);
+
   // Build room exit doors to edge walls
   if (exits & EXIT_N) { wall_map[4][0] = ROOM_EXIT_N; }
   if (exits & EXIT_S) { wall_map[4][MAP_H - 1] = ROOM_EXIT_S; }
@@ -47,9 +49,9 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
     for (int j = 2; j < MAP_H - 2; j++) {
       if ((wall_map[i][j]) >= ROOM_PILLAR1) {
         // TODO Find way to randomize same pillar ids to same direction for symmetrical pillar templates and double walls
-        //pillar_dir = squirrel(wall_map[i][j], seed + 307) % 5;
+        //pillar_dir = squirrel(wall_map[i][j], room_seed + 307) % 5;
         pillars_found++;
-        pillar_dir = squirrel_3d(i, j, pillars_found, seed + 307) % 5;
+        pillar_dir = squirrel_3d(i, j, pillars_found, room_seed + 307) % 5;
 
         switch (pillar_dir) {
           case 0:  // North
@@ -136,7 +138,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
       }
 
       // Replace tiles
-      d6 = 1 + (squirrel_3d(i + floor_neighbours, j + wall_neighbours, tile_type + deco_neighbours, seed + 347) % 6);
+      d6 = 1 + (squirrel_3d(i + floor_neighbours, j + wall_neighbours, tile_type + deco_neighbours, room_seed + 347) % 6);
       
       if (tile_type >= ROOM_PILLAR1 && tile_type <= ROOM_PILLAR10) {
         if (wall_neighbours == 0) {
@@ -153,7 +155,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         }
       }
 
-      if (wall_map[i][j] == ROOM_WALL) {
+      if (tile_type == ROOM_WALL) {
         // All inner walls to decorative wall, early stop
         wall_map[i][j] = ROOM_WALL_DECO;
         continue;
@@ -197,7 +199,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   return 1;
 }
 
-bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], unsigned int tile_x, unsigned int tile_y) {
+bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y) {
   switch(wall_map[tile_x][tile_y] ) {
     case ROOM_FLOOR:
     case ROOM_EXIT_N:
@@ -245,7 +247,7 @@ int get_djikstra_lowest(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y) 
   return current_lowest;
 }
 
-int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], unsigned int goal_x, unsigned int goal_y) {
+int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y) {
   // Clear current map
   clear_djikstra_map(djikstra_map);
 
