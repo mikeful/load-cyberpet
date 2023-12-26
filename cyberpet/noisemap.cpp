@@ -410,3 +410,90 @@ int get_world_tile(int tile_data[15], int world_x, int world_y, int time_step, u
 
     return 1;
 }
+
+unsigned int get_world_draw_tile(int world_tile_data[15]) {
+  int tile = 0;
+
+  switch (world_tile_data[TILE_HEIGHT]) {
+    case HEIGHT_DEEP_SEA:
+      tile = 442;
+      break;
+    case HEIGHT_SEA:
+      tile = 441;
+      break;
+    //case HEIGHT_SHALLOW:
+    //case HEIGHT_REGULAR:
+    //case HEIGHT_HILL:
+    case HEIGHT_MOUNTAIN:
+      tile = 1516;
+      break;
+    case HEIGHT_PEAK:
+      tile = 1517;
+      break;
+    default:
+      switch (world_tile_data[TILE_BIOME]) {
+      case BIOME_ICE_FIELD:
+        tile = 588;
+        break;
+      case BIOME_TUNDRA:
+        tile = 434;
+        break;
+      case BIOME_TAIGA:
+        tile = 1511;
+        break;
+      case BIOME_PLAINS:
+        tile = 432;
+        break;
+      case BIOME_FOREST:
+        tile = 1512;
+        break;
+      case BIOME_DEEP_FOREST:
+        tile = 1510;
+        break;
+      case BIOME_DESERT:
+        tile = 1920;
+        break;
+      case BIOME_SAVANNAH:
+        tile = 436;
+        break;
+      case BIOME_JUNGLE:
+        tile = 1377;
+        break;
+      break;
+    }
+  }
+
+  if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
+    if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
+      tile = 1537;
+    } else {
+      tile = 1519;
+    }
+  } else if (world_tile_data[TILE_BUILDINGS] == BULDINGS_CITY) {
+    if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
+      tile = 1537;
+    } else {
+      tile = 1523;
+    }
+  }
+
+  if (world_tile_data[TILE_DUNGEON] == TREASURE_DUNGEON) {
+    tile = 1531;
+  }
+
+  return tile;
+}
+
+byte get_room_exits(int world_x, int world_y) {
+  return world_tile_exit_patterns[
+    world_x % 4 + (4 * (world_y % 4))
+  ];
+}
+
+unsigned int get_room_level(int world_x, int world_y) {
+  return 1 + abs(world_x) + abs(world_y);
+}
+
+unsigned int get_room_level(int world_x, int world_y, int world_z) {
+  return 1 + abs(world_x) + abs(world_y) + (abs(world_z) * 3);
+}

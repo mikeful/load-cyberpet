@@ -70,6 +70,41 @@ const byte biome_matrix[9] = {
 #define TILE_FACTION_MONSTER 13
 #define TILE_FACTION_NATURE 14
 
+#ifndef EXIT_N
+#define EXIT_N 1
+#define EXIT_E 2
+#define EXIT_S 4
+#define EXIT_W 8
+#endif
+
+// Herringbone tile pattern for world room exits
+// https://nothings.org/gamedev/herringbone/index.html
+const byte world_tile_exit_patterns [] PROGMEM = {
+	// Row 1
+  EXIT_N | EXIT_E | EXIT_W,
+  EXIT_N | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_E | EXIT_S,
+  EXIT_E | EXIT_S | EXIT_W,
+
+  // Row 2
+  EXIT_E | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_E | EXIT_W,
+  EXIT_N | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_E | EXIT_S,
+
+  // Row 3
+  EXIT_N | EXIT_E | EXIT_S,
+  EXIT_E | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_E | EXIT_W,
+  EXIT_N | EXIT_S | EXIT_W,
+
+  // Row 4
+  EXIT_N | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_E | EXIT_S,
+  EXIT_E | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_E | EXIT_W,
+};
+
 float sine_gauss_filter_2d(int width, int x, int y);
 float sine_gauss_filter_3d(int width, int x, int y, int z);
 int get_cosine_noisepoint(int pos_x, int pos_y, unsigned int seed, float scale);
@@ -83,5 +118,10 @@ bool is_triangle_grid_node(int check_x, int check_y, int grid_size);
 bool is_poi_big(int world_x, int world_y, int tile_value, int poi_prob, int poi_grid_size, unsigned int seed);
 bool is_poi_small(int world_x, int world_y, int tile_value, int poi_prob, int poi_grid_size);
 int get_world_tile(int tile_data[15], int world_x, int world_y, int time_step, unsigned int seed);
+
+unsigned int get_world_draw_tile(int world_tile_data[15]);
+byte get_room_exits(int world_x, int world_y);
+unsigned int get_room_level(int world_x, int world_y);
+unsigned int get_room_level(int world_x, int world_y, int world_z);
 
 #endif

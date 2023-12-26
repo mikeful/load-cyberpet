@@ -11,7 +11,6 @@
 #include "tileset.h"
 #include "noisemap.h"
 #include "room.h"
-#include "world.h"
 
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
@@ -152,80 +151,14 @@ void loop() {
     for (int j = 0; j < MAP_H; j++) {
       //value = noisemap2d[i][j];
       get_world_tile(world_tile_data, i + 0, j + counter, 0, 0);
+      
       value = world_tile_data[TILE_HEIGHT_VALUE];
-
       if (value > map_max) { map_max = value; }
       if (value < map_min) { map_min = value; }
 
-      tile = 0;
-      switch (world_tile_data[TILE_HEIGHT]) {
-        case HEIGHT_DEEP_SEA:
-          tile = 442;
-          break;
-        case HEIGHT_SEA:
-          tile = 441;
-          break;
-        //case HEIGHT_SHALLOW:
-        //case HEIGHT_REGULAR:
-        //case HEIGHT_HILL:
-        case HEIGHT_MOUNTAIN:
-          tile = 1516;
-          break;
-        case HEIGHT_PEAK:
-          tile = 1517;
-          break;
-        default:
-          switch (world_tile_data[TILE_BIOME]) {
-          case BIOME_ICE_FIELD:
-            tile = 588;
-            break;
-          case BIOME_TUNDRA:
-            tile = 434;
-            break;
-          case BIOME_TAIGA:
-            tile = 1511;
-            break;
-          case BIOME_PLAINS:
-            tile = 432;
-            break;
-          case BIOME_FOREST:
-            tile = 1512;
-            break;
-          case BIOME_DEEP_FOREST:
-            tile = 1510;
-            break;
-          case BIOME_DESERT:
-            tile = 1920;
-            break;
-          case BIOME_SAVANNAH:
-            tile = 436;
-            break;
-          case BIOME_JUNGLE:
-            tile = 1377;
-            break;
-          break;
-        }
-      }
+      tile = get_world_draw_tile(world_tile_data);
 
-      if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
-        if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
-          tile = 1537;
-        } else {
-          tile = 1519;
-        }
-      } else if (world_tile_data[TILE_BUILDINGS] == BULDINGS_CITY) {
-        if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
-          tile = 1537;
-        } else {
-          tile = 1523;
-        }
-      }
-
-      if (world_tile_data[TILE_DUNGEON] == TREASURE_DUNGEON) {
-        tile = 1531;
-      }
-
-      //display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+      display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
     }
   }
 
