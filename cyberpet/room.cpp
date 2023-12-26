@@ -223,8 +223,8 @@ int clear_djikstra_map(int djikstra_map[MAP_W][MAP_H]) {
 }
 
 int get_djikstra_value(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
-  if (tile_x < 0 || tile_x > MAP_W) { return DJIKSTRA_MAX; }
-  if (tile_y < 0 || tile_y > MAP_H) { return DJIKSTRA_MAX; }
+  if (tile_x < 0 || tile_x > MAP_W - 1) { return DJIKSTRA_MAX; }
+  if (tile_y < 0 || tile_y > MAP_H - 1) { return DJIKSTRA_MAX; }
 
   return djikstra_map[tile_x][tile_y];
 }
