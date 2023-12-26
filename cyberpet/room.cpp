@@ -52,22 +52,22 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         pillar_dir = squirrel_3d(i, j, pillars_found, seed + 307) % 5;
 
         switch (pillar_dir) {
-          case 0:  // N
+          case 0:  // North
             for (int build_y = 1; wall_map[i][j - build_y] == ROOM_FLOOR; build_y++) {
               wall_map[i][j - build_y] = ROOM_WALL;
             }
             break;
-          case 1:  // E
+          case 1:  // East
             for (int build_x = 1; wall_map[i + build_x][j] == ROOM_FLOOR; build_x++) {
               wall_map[i + build_x][j] = ROOM_WALL;
             }
             break;
-          case 2:  // S
+          case 2:  // South
             for (int build_y = 1; wall_map[i][j + build_y] == ROOM_FLOOR; build_y++) {
               wall_map[i][j + build_y] = ROOM_WALL;
             }
             break;
-          case 3:  // W
+          case 3:  // West
             for (int build_x = 1; wall_map[i - build_x][j] == ROOM_FLOOR; build_x++) {
               wall_map[i - build_x][j] = ROOM_WALL;
             }

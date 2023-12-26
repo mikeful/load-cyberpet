@@ -123,10 +123,18 @@ void loop() {
     build_djikstra_map(room_exite_map, room_wallmap, MAP_W - 1, 7);
 
     clear_djikstra_map(room_exit_map);
-    if (room_exits & EXIT_N) { merge_djikstra_maps(room_exit_map, room_exitn_map); }
-    if (room_exits & EXIT_S) { merge_djikstra_maps(room_exit_map, room_exits_map); }
-    if (room_exits & EXIT_W) { merge_djikstra_maps(room_exit_map, room_exitw_map); }
-    if (room_exits & EXIT_E) { merge_djikstra_maps(room_exit_map, room_exite_map); }
+    if (room_exits & EXIT_N) {
+      merge_djikstra_maps(room_exit_map, room_exitn_map);
+    }
+    if (room_exits & EXIT_S) {
+      merge_djikstra_maps(room_exit_map, room_exits_map);
+    }
+    if (room_exits & EXIT_W) {
+      merge_djikstra_maps(room_exit_map, room_exitw_map);
+    }
+    if (room_exits & EXIT_E) {
+      merge_djikstra_maps(room_exit_map, room_exite_map);
+    }
   }
 
   int value = 0;
