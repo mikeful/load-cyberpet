@@ -110,23 +110,6 @@ void loop() {
 
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
-      /*tile = 0;
-      switch (room_wallmap[i][j]) {
-        case ROOM_FLOOR:
-        case ROOM_EXIT_N:
-        case ROOM_EXIT_E:
-        case ROOM_EXIT_S:
-        case ROOM_EXIT_W:
-          tile = 432;
-          break;
-        case ROOM_WALL:
-          tile = 1512;
-          break;
-        case ROOM_WALL_DECO:
-          tile = 1510;
-          break;
-      }*/
-
       tile = room_tilemap[i][j];
       display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
     }
@@ -140,25 +123,6 @@ void loop() {
 
       if (value > map_max) { map_max = value; }
       if (value < map_min) { map_min = value; }
-
-      /*
-      tile = 0;
-      if (value >= 230) {
-        tile = 1517;
-      } else if (value >= 200) {
-        tile = 1516;
-      } else if (value >= 160) {
-        tile = 1512;
-      } else if (value >= 120) {
-        tile = 1511;
-      } else if (value >= 80) {
-        tile = 609;
-      } else if (value >= 40) {
-        tile = 442;
-      } else if (value < 40) {
-        tile = 443;
-      }
-      */
 
       tile = 0;
       switch (world_tile_data[TILE_HEIGHT]) {
