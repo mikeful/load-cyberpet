@@ -49,5 +49,7 @@ const byte world_tile_exit_patterns [] PROGMEM = {
 #define WORLD_H
 
 byte get_room_exits(int world_x, int world_y);
+unsigned int get_room_level(int world_x, int world_y);
+unsigned int get_room_level(int world_x, int world_y, int world_z);
 
 #endif
