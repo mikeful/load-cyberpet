@@ -176,6 +176,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
 
   // Pass 3: Convert wallmap to tilemap
   unsigned int tile = 0;
+  
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
       tile = 0;
@@ -188,10 +189,12 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
           tile = 432;
           break;
         case ROOM_WALL:
-          tile = 1512;
+          //tile = 1512;
+          tile = get_world_draw_tile(world_tile_data);
           break;
         case ROOM_WALL_DECO:
-          tile = 1510;
+          //tile = 1510;
+          tile = get_world_draw_tile(world_tile_data);
           break;
       }
 

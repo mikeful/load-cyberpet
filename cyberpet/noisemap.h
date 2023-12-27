@@ -106,6 +106,25 @@ const byte world_tile_exit_patterns [] PROGMEM = {
   EXIT_N | EXIT_E | EXIT_W,
 };
 
+// Internally fully connected 3x3 room area, exits to next world tile is added
+// at room generation
+const byte area_room_exits [] PROGMEM = {
+  // Row 1
+  EXIT_E | EXIT_S,
+  EXIT_E | EXIT_S | EXIT_W,
+  EXIT_S | EXIT_W,
+
+  // Row 2
+  EXIT_N | EXIT_E | EXIT_S,
+  EXIT_N | EXIT_E | EXIT_S | EXIT_W,
+  EXIT_N | EXIT_S | EXIT_W,
+
+  // Row 3
+  EXIT_N | EXIT_E,
+  EXIT_N | EXIT_E | EXIT_W,
+  EXIT_N | EXIT_W,
+};
+
 float sine_gauss_filter_2d(int width, int x, int y);
 float sine_gauss_filter_3d(int width, int x, int y, int z);
 int get_cosine_noisepoint(int pos_x, int pos_y, unsigned int seed, float scale);
@@ -121,6 +140,7 @@ bool is_poi_small(int world_x, int world_y, int tile_value, int poi_prob, int po
 int get_world_tile(int tile_data[15], int world_x, int world_y, int time_step, unsigned int seed);
 
 unsigned int get_world_draw_tile(int world_tile_data[15]);
-byte get_room_exits(int world_x, int world_y);
+byte get_area_exits(int world_x, int world_y);
+byte get_room_exits(int area_x, int area_y);
 
 #endif

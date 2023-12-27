@@ -484,8 +484,14 @@ unsigned int get_world_draw_tile(int world_tile_data[15]) {
   return tile;
 }
 
-byte get_room_exits(int world_x, int world_y) {
+byte get_area_exits(int world_x, int world_y) {
   return world_tile_exit_patterns[
-    mod(world_x, 4) + (4 * mod(world_y, 4))
+    mod(world_x, 4) + (mod(world_y, 4) * 4)
+  ];
+}
+
+byte get_room_exits(int area_x, int area_y) {
+  return area_room_exits[
+    mod(area_x, 3) + (mod(area_y, 3) * 3)
   ];
 }

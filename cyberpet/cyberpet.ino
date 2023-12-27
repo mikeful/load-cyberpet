@@ -23,7 +23,9 @@ byte game_state = STATE_START;
 unsigned int tile = 0;
 int world_x = 0;
 int world_y = 0;
-int room_x = 4;
+int area_x = 1; // 3x3 rooms in world tile
+int area_y = 1;
+int room_x = 4; // Player positon in room
 int room_y = 7;
 bool new_room = true;
 int ai_world_dir = 0;
@@ -33,6 +35,7 @@ byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
 
 byte room_exits = 0;
+byte area_exits = 0;
 int room_exit_map[MAP_W][MAP_H];
 int room_exitn_map[MAP_W][MAP_H];
 int room_exite_map[MAP_W][MAP_H];
@@ -135,9 +138,22 @@ void loop() {
     case STATE_ROOM:
       // Setup new room if entered
       if (new_room) {
-        room_exits = get_room_exits(world_x, world_y);
+        //Serial.println("Start room generation: X" + String(world_x) + " Y" + String(world_y) + ", x" + String(area_x) +  " y" + String(area_y));
 
-        setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, 0, 0, room_exits, seed);
+        // Get current world tile and area
+        get_world_tile(world_tile_data, world_x, world_y, 0, seed);
+        area_exits = get_area_exits(world_x, world_y);
+        room_exits = get_room_exits(area_x, area_y);
+        //room_exits = 15;
+
+        // Add area exits to room exits on edges
+        if (area_x == 1 && area_y == 0) { room_exits = room_exits | area_exits; }
+        if (area_x == 2 && area_y == 1) { room_exits = room_exits | area_exits; }
+        if (area_x == 1 && area_y == 2) { room_exits = room_exits | area_exits; }
+        if (area_x == 0 && area_y == 1) { room_exits = room_exits | area_exits; }
+
+        // Setup player visible room
+        setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, seed);
         build_djikstra_map(room_exitn_map, room_wallmap, 4, 0);
         build_djikstra_map(room_exits_map, room_wallmap, 4, MAP_H - 1);
         build_djikstra_map(room_exitw_map, room_wallmap, 0, 7);
@@ -158,22 +174,22 @@ void loop() {
         }
 
         ai_world_dir = 0;
-        int rand_dir = 1 + (squirrel_2d(world_x, world_y, seed + counter) % 4);
-        while (ai_world_dir == 0) {
-          if (rand_dir == 1) { ai_world_dir = DIR_N; }
-          if (rand_dir == 2) { ai_world_dir = DIR_S; }
-          if (rand_dir == 3) { ai_world_dir = DIR_W; }
-          if (rand_dir == 4) { ai_world_dir = DIR_E; }
-
-          if (! (room_exits & ai_world_dir)) { ai_world_dir = 0; }
-
-          rand_dir = 1 + ((rand_dir + 1) % 4);
-        }
-
+        ai_room_dir = 0;
         new_room = false;
       }
 
       if (counter % 5 == 0) {
+        // Decide next direction
+        if (ai_world_dir == 0) {
+          int rand_dir = 1 + (squirrel_2d(world_x, world_y, seed + counter) % 4);
+          if (rand_dir == 1) { ai_world_dir = DIR_N; }
+          if (rand_dir == 2) { ai_world_dir = DIR_E; }
+          if (rand_dir == 3) { ai_world_dir = DIR_S; }
+          if (rand_dir == 4) { ai_world_dir = DIR_W; }
+
+          if (! (room_exits & ai_world_dir)) { ai_world_dir = 0; }
+        }
+
         // Navigate player in current room
         if (ai_world_dir == DIR_N) { ai_room_dir = get_djikstra_direction(room_exitn_map, room_x, room_y, seed); }
         if (ai_world_dir == DIR_S) { ai_room_dir = get_djikstra_direction(room_exits_map, room_x, room_y, seed); }
@@ -208,21 +224,45 @@ void loop() {
 
       // Check for door
       if (room_y == 0) {
+        // North
         room_y = MAP_H - 2;
-        world_y--;
         new_room = true;
+
+        area_y--;
+        if (area_y < 0) {
+          area_y = 2;
+          world_y--;
+        }
       } else if (room_y == MAP_H - 1) {
+        // South
         room_y = 1;
-        world_y++;
         new_room = true;
+
+        area_y++;
+        if (area_y > 2) {
+          area_y = 0;
+          world_y++;
+        }
       } else if (room_x == 0) {
+        // West
         room_x = MAP_W - 2;
-        world_x--;
         new_room = true;
+
+        area_x--;
+        if (area_x < 0) {
+          area_x = 2;
+          world_x--;
+        }
       } else if (room_x == MAP_W - 1) {
+        // East
         room_x = 1;
-        world_x++;
         new_room = true;
+
+        area_x++;
+        if (area_x > 2) {
+          area_x = 0;
+          world_x++;
+        }
       }
 
       break; // STATE_ROOM
@@ -257,9 +297,9 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  display1.println(format_number(counter));
+  display1.println(String(area_x)+ "," + String(area_y));
   display1.setCursor(32, 128);
-  display1.println("D" + String(ai_world_dir));
+  display1.println(format_number(counter));
 
   // write the buffer to the display
   display1.display();
