@@ -33,25 +33,85 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   if (exits & EXIT_W) { wall_map[0][7] = ROOM_EXIT_W; }
   if (exits & EXIT_E) { wall_map[MAP_W - 1][7] = ROOM_EXIT_E; }
 
-  // TODO Load pillars from template selected with tile density value
-  wall_map[2][4] = ROOM_PILLAR1;
-  wall_map[2][9] = ROOM_PILLAR2;
-  wall_map[5][4] = ROOM_PILLAR3;
-  wall_map[5][9] = ROOM_PILLAR4;
+  // Set pillars from template selected with tile density value
+  d6 = 1 + (squirrel_4d(world_x, world_y, area_x, area_y, room_seed + 129) % 6);
+  if (world_tile_data[TILE_DENSITY] == 0) {
+    if (d6 <= 2) {
+      // One wall
+      wall_map[3][6] = ROOM_PILLAR1;
+    } else if (d6 <= 5) {
+      // Two walls
+      wall_map[3][5] = ROOM_PILLAR1;
+      wall_map[3][9] = ROOM_PILLAR2;
+    }
+    // Otherwise no walls
+  } else if (world_tile_data[TILE_DENSITY] == 1) {
+      if (d6 <= 3) {
+      // Two walls
+      wall_map[3][5] = ROOM_PILLAR1;
+      wall_map[3][9] = ROOM_PILLAR2;
+    } else {
+      // Three walls
+      wall_map[3][3] = ROOM_PILLAR1;
+      wall_map[3][6] = ROOM_PILLAR2;
+      wall_map[3][9] = ROOM_PILLAR3;
+    }
+  } else if (world_tile_data[TILE_DENSITY] == 3) {
+    if (d6 <= 2) {
+      // Six walls
+      wall_map[2][3] = ROOM_PILLAR1;
+      wall_map[2][6] = ROOM_PILLAR2;
+      wall_map[2][10] = ROOM_PILLAR3;
 
-  /*
-  wall_map[2][2] = ROOM_PILLAR1;
-  wall_map[2][4] = ROOM_PILLAR2;
-  wall_map[2][6] = ROOM_PILLAR3;
-  wall_map[2][9] = ROOM_PILLAR4;
-  wall_map[2][11] = ROOM_PILLAR5;
+      wall_map[5][3] = ROOM_PILLAR4;
+      wall_map[5][6] = ROOM_PILLAR5;
+      wall_map[5][10] = ROOM_PILLAR6;
+    } else if (d6 <= 5) {
+      // Eight walls
+      wall_map[2][2] = ROOM_PILLAR1;
+      wall_map[2][5] = ROOM_PILLAR2;
+      wall_map[2][8] = ROOM_PILLAR3;
+      wall_map[2][11] = ROOM_PILLAR4;
 
-  wall_map[5][2] = ROOM_PILLAR6;
-  wall_map[5][4] = ROOM_PILLAR7;
-  wall_map[5][6] = ROOM_PILLAR8;
-  wall_map[5][9] = ROOM_PILLAR9;
-  wall_map[5][11] = ROOM_PILLAR10;
-  */
+      wall_map[5][2] = ROOM_PILLAR5;
+      wall_map[5][5] = ROOM_PILLAR6;
+      wall_map[5][8] = ROOM_PILLAR7;
+      wall_map[5][11] = ROOM_PILLAR8;
+    } else {
+      // Ten walls
+      wall_map[2][2] = ROOM_PILLAR1;
+      wall_map[2][4] = ROOM_PILLAR2;
+      wall_map[2][6] = ROOM_PILLAR3;
+      wall_map[2][9] = ROOM_PILLAR4;
+      wall_map[2][11] = ROOM_PILLAR5;
+
+      wall_map[5][2] = ROOM_PILLAR6;
+      wall_map[5][4] = ROOM_PILLAR7;
+      wall_map[5][6] = ROOM_PILLAR8;
+      wall_map[5][9] = ROOM_PILLAR9;
+      wall_map[5][11] = ROOM_PILLAR10;
+    }
+
+  } else if (world_tile_data[TILE_DENSITY] == 4) {
+    // Ten walls
+    wall_map[2][2] = ROOM_PILLAR1;
+    wall_map[2][4] = ROOM_PILLAR2;
+    wall_map[2][6] = ROOM_PILLAR3;
+    wall_map[2][9] = ROOM_PILLAR4;
+    wall_map[2][11] = ROOM_PILLAR5;
+
+    wall_map[5][2] = ROOM_PILLAR6;
+    wall_map[5][4] = ROOM_PILLAR7;
+    wall_map[5][6] = ROOM_PILLAR8;
+    wall_map[5][9] = ROOM_PILLAR9;
+    wall_map[5][11] = ROOM_PILLAR10;
+  } else {
+    // Default: Four walls
+    wall_map[2][4] = ROOM_PILLAR1;
+    wall_map[2][9] = ROOM_PILLAR2;
+    wall_map[5][4] = ROOM_PILLAR3;
+    wall_map[5][9] = ROOM_PILLAR4;
+  }
 
   // Pass 1: Extend walls out of pillars to random direction
   int pillars_found = 0;
@@ -240,7 +300,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         case ROOM_EXIT_E:
         case ROOM_EXIT_S:
         case ROOM_EXIT_W:
-          tile = 432;
+          tile = 225;
           break;
         case ROOM_WALL:
           //tile = 1512;
