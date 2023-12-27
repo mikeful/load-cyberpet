@@ -1,6 +1,19 @@
 #include "room.h"
 
 int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int world_x, int world_y, int world_tile_data[15], int area_x, int area_y, byte exits, unsigned int seed) {
+  // Setup variables
+  int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed);
+  bool is_constructed = false;
+  byte d6 = 0;
+
+  if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
+    is_constructed = true;
+  } else if (world_tile_data[TILE_BUILDINGS] == BULDINGS_CITY) {
+    is_constructed = true;
+  } else if (world_tile_data[TILE_DUNGEON] == TREASURE_DUNGEON) {
+    is_constructed = true;
+  }
+
   // Build edge walls, clear tilemap
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
@@ -13,8 +26,6 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
       tile_map[i][j] = 0;
     }
   }
-
-  int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed);
 
   // Build room exit doors to edge walls
   if (exits & EXIT_N) { wall_map[4][0] = ROOM_EXIT_N; }
@@ -83,7 +94,6 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
 
   // Pass 2: Replace tile patterns
   byte tile_type = 0;
-  byte d6 = 0;
   byte floor_neighbours = 0;
   byte pillar_neighbours = 0;
   byte wall_neighbours = 0;
@@ -155,15 +165,20 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         }
       }
 
-      if (tile_type == ROOM_WALL) {
+      if (wall_map[i][j] == ROOM_WALL) {
         // All inner walls to decorative wall, early stop
         wall_map[i][j] = ROOM_WALL_DECO;
         continue;
       }
 
-      if (tile_type == ROOM_FLOOR) {
+      if (wall_map[i][j] == ROOM_FLOOR) {
         if (floor_neighbours >= 7 && d6 == 6) {
           // Some isolated floors to decorative wall
+          wall_map[i][j] = ROOM_WALL_DECO;
+        }
+
+        if ((wall_neighbours + deco_neighbours) == 7 && floor_neighbours == 1 && d6 == 6) {
+          // Some deadend floors to decorative wall
           wall_map[i][j] = ROOM_WALL_DECO;
         }
       }

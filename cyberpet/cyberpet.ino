@@ -48,7 +48,7 @@ int world_tile_data[15];
 int map_min = 999;
 int map_max = 0;
 
-int counter = 1;
+unsigned int counter = 1;
 
 // Battery stuff
 int volt = 0;
@@ -297,7 +297,7 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  display1.println(String(area_x)+ "," + String(area_y));
+  display1.println(String(world_tile_data[TILE_DENSITY]));
   display1.setCursor(32, 128);
   display1.println(format_number(counter));
 
