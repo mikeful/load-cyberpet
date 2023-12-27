@@ -171,6 +171,9 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
     }
   }
 
+  // Clear map center tile
+  wall_map[4][7] = ROOM_FLOOR;
+
   // Pass 3: Convert wallmap to tilemap
   unsigned int tile = 0;
   for (int i = 0; i < MAP_W; i++) {
@@ -293,4 +296,69 @@ int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_
   }
 
   return 1;
+}
+
+int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed) {
+  int tile_value = DJIKSTRA_MAX;
+  int current_lowest = DJIKSTRA_MAX;
+  int current_dir = 0;
+
+  int d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 893) % 4);
+
+  // Check west
+  tile_value = get_djikstra_value(djikstra_map, tile_x - 1, tile_y);
+  if (tile_value < current_lowest) {
+    current_lowest = tile_value;
+    current_dir = DIR_W;
+  }
+  if (tile_value == 0) { return current_dir; }
+
+  // Check east
+  tile_value = get_djikstra_value(djikstra_map, tile_x + 1, tile_y);
+  if (tile_value < current_lowest) {
+    current_lowest = tile_value;
+    current_dir = DIR_E;
+  } else if (tile_value == current_lowest && d4 >= 2) {
+    // Equally valid direction found, choose randomly
+    current_lowest = tile_value;
+    current_dir = DIR_E;
+
+    d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 620 + tile_value) % 4);
+  }
+  if (tile_value == 0) { return current_dir; }
+  
+  // Check north
+  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y - 1);
+  if (tile_value < current_lowest) {
+    current_lowest = tile_value;
+    current_dir = DIR_N;
+  } else if (tile_value == current_lowest && d4 >= 2) {
+    // Equally valid direction found, choose randomly
+    current_lowest = tile_value;
+    current_dir = DIR_N;
+
+    d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 389 + tile_value) % 4);
+  }
+  if (tile_value == 0) { return current_dir; }
+  
+  // Check south
+  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y + 1);
+  if (tile_value < current_lowest) {
+    current_lowest = tile_value;
+    current_dir = DIR_S;
+  } else if (tile_value == current_lowest && d4 >= 2) {
+    // Equally valid direction found, choose randomly
+    current_lowest = tile_value;
+    current_dir = DIR_S;
+
+    d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 547 + tile_value) % 4);
+  }
+  if (tile_value == 0) { return current_dir; }
+
+  // Reset direction selection if lowest found value is non-valid
+  if (current_lowest == DJIKSTRA_MAX) {
+    current_dir = 0;
+  }
+
+  return current_dir;
 }

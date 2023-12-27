@@ -12,6 +12,23 @@
 #include "noisemap.h"
 #include "room.h"
 
+#define STATE_START 0
+#define STATE_MAINMENU 1
+#define STATE_ROOM 2
+#define STATE_WORLDMAP 3
+#define STATE_GAMEMENU 4
+
+int seed = 0;
+byte game_state = STATE_START;
+unsigned int tile = 0;
+int world_x = 0;
+int world_y = 0;
+int room_x = 4;
+int room_y = 7;
+bool new_room = true;
+int ai_world_dir = 0;
+int ai_room_dir = 0;
+
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
 
@@ -70,8 +87,6 @@ void setup() {
       room_tilemap[i][j] = 0;
     }
   }
-
-  setup_room(room_wallmap, room_tilemap, 0, 0, world_tile_data, 0, 0, 15, 0);
 }
 
 void loop() {
@@ -110,73 +125,141 @@ void loop() {
   display1->drawString(32, 5, String(floatVoltage) + "V");
   */
 
-  // Map stuff
-  //int ok = get_simple_noisemap(noisemap2d, 0, counter, MAP_W, MAP_H, 0, 0.3);
-  //int ok = get_simple_noisemap3d(noisemap2d, 0, counter, 0, MAP_W, MAP_H, 0, 0.3);
+  switch(game_state) {
+    case STATE_START:
+      game_state = STATE_ROOM;
 
-  if (counter % 50 == 0) {
-    room_exits = get_room_exits(0, 0);
-    setup_room(room_wallmap, room_tilemap, 0, 0, world_tile_data, 0, 0, room_exits, counter);
-    build_djikstra_map(room_exitn_map, room_wallmap, 4, 0);
-    build_djikstra_map(room_exits_map, room_wallmap, 4, MAP_H - 1);
-    build_djikstra_map(room_exitw_map, room_wallmap, 0, 7);
-    build_djikstra_map(room_exite_map, room_wallmap, MAP_W - 1, 7);
+      break; // STATE_START
+    case STATE_MAINMENU:
+      break; // STATE_MAINMENU
+    case STATE_ROOM:
+      // Setup new room if entered
+      if (new_room) {
+        room_exits = get_room_exits(world_x, world_y);
 
-    clear_djikstra_map(room_exit_map);
-    if (room_exits & EXIT_N) {
-      merge_djikstra_maps(room_exit_map, room_exitn_map);
-    }
-    if (room_exits & EXIT_S) {
-      merge_djikstra_maps(room_exit_map, room_exits_map);
-    }
-    if (room_exits & EXIT_W) {
-      merge_djikstra_maps(room_exit_map, room_exitw_map);
-    }
-    if (room_exits & EXIT_E) {
-      merge_djikstra_maps(room_exit_map, room_exite_map);
-    }
-  }
+        setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, 0, 0, room_exits, seed);
+        build_djikstra_map(room_exitn_map, room_wallmap, 4, 0);
+        build_djikstra_map(room_exits_map, room_wallmap, 4, MAP_H - 1);
+        build_djikstra_map(room_exitw_map, room_wallmap, 0, 7);
+        build_djikstra_map(room_exite_map, room_wallmap, MAP_W - 1, 7);
 
-  int value = 0;
-  unsigned int tile = 0;
+        clear_djikstra_map(room_exit_map);
+        if (room_exits & EXIT_N) {
+          merge_djikstra_maps(room_exit_map, room_exitn_map);
+        }
+        if (room_exits & EXIT_S) {
+          merge_djikstra_maps(room_exit_map, room_exits_map);
+        }
+        if (room_exits & EXIT_W) {
+          merge_djikstra_maps(room_exit_map, room_exitw_map);
+        }
+        if (room_exits & EXIT_E) {
+          merge_djikstra_maps(room_exit_map, room_exite_map);
+        }
 
-  for (int i = 0; i < MAP_W; i++) {
-    for (int j = 0; j < MAP_H; j++) {
-      //tile = room_tilemap[i][j];
-      //display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+        ai_world_dir = 0;
+        int rand_dir = 1 + (squirrel_2d(world_x, world_y, seed + counter) % 4);
+        while (ai_world_dir == 0) {
+          if (rand_dir == 1) { ai_world_dir = DIR_N; }
+          if (rand_dir == 2) { ai_world_dir = DIR_S; }
+          if (rand_dir == 3) { ai_world_dir = DIR_W; }
+          if (rand_dir == 4) { ai_world_dir = DIR_E; }
 
-      if (room_exit_map[i][j] < 50) {
-        display1.setCursor(i * 8, 8 + (j * 8));
-        display1.println(String(min(room_exit_map[i][j], 15), HEX));
-      } else {
-        tile = room_tilemap[i][j];
-        //display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+          if (! (room_exits & ai_world_dir)) { ai_world_dir = 0; }
+
+          rand_dir = 1 + ((rand_dir + 1) % 4);
+        }
+
+        new_room = false;
       }
-    }
-  }
 
-  for (int i = 0; i < MAP_W; i++) {
-    for (int j = 0; j < MAP_H; j++) {
-      //value = noisemap2d[i][j];
-      get_world_tile(world_tile_data, i + 0, j + counter, 0, 0);
-      
-      value = world_tile_data[TILE_HEIGHT_VALUE];
-      if (value > map_max) { map_max = value; }
-      if (value < map_min) { map_min = value; }
+      if (counter % 5 == 0) {
+        // Navigate player in current room
+        if (ai_world_dir == DIR_N) { ai_room_dir = get_djikstra_direction(room_exitn_map, room_x, room_y, seed); }
+        if (ai_world_dir == DIR_S) { ai_room_dir = get_djikstra_direction(room_exits_map, room_x, room_y, seed); }
+        if (ai_world_dir == DIR_W) { ai_room_dir = get_djikstra_direction(room_exitw_map, room_x, room_y, seed); }
+        if (ai_world_dir == DIR_E) { ai_room_dir = get_djikstra_direction(room_exite_map, room_x, room_y, seed); }
 
-      tile = get_world_draw_tile(world_tile_data);
+        if (ai_room_dir == DIR_N) { room_y--; }
+        if (ai_room_dir == DIR_S) { room_y++; }
+        if (ai_room_dir == DIR_W) { room_x--; }
+        if (ai_room_dir == DIR_E) { room_x++; }
+      }
 
-      display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
-    }
+      // Draw room
+      for (int i = 0; i < MAP_W; i++) {
+        for (int j = 0; j < MAP_H; j++) {
+          if (i == room_x && j == room_y) {
+            // Draw player
+            tile = 326;
+            display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+          } else {
+            // Draw room tile
+            /*if (room_exit_map[i][j] < 30) {
+              display1.setCursor(i * 8, 8 + (j * 8));
+              display1.println(String(min(room_exitn_map[i][j], 15), HEX));
+            } else {*/
+              tile = room_tilemap[i][j];
+              display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+            /*}*/
+          }
+        }
+      }
+
+      // Check for door
+      if (room_y == 0) {
+        room_y = MAP_H - 2;
+        world_y--;
+        new_room = true;
+      } else if (room_y == MAP_H - 1) {
+        room_y = 1;
+        world_y++;
+        new_room = true;
+      } else if (room_x == 0) {
+        room_x = MAP_W - 2;
+        world_x--;
+        new_room = true;
+      } else if (room_x == MAP_W - 1) {
+        room_x = 1;
+        world_x++;
+        new_room = true;
+      }
+
+      break; // STATE_ROOM
+    case STATE_WORLDMAP:
+      //int ok = get_simple_noisemap(noisemap2d, 0, counter, MAP_W, MAP_H, seed, 0.3);
+      //int ok = get_simple_noisemap3d(noisemap2d, 0, counter, 0, MAP_W, MAP_H, seed, 0.3);
+
+      for (int i = 0; i < MAP_W; i++) {
+        for (int j = 0; j < MAP_H; j++) {
+          //value = noisemap2d[i][j];
+          if (i == 4 && j == 7) {
+            // Draw player
+            tile = 326;
+          } else {
+            // Draw map tile
+            get_world_tile(world_tile_data, i + (world_x - 4), j + (world_y - 7), 0, seed);
+            tile = get_world_draw_tile(world_tile_data);
+          }
+
+          display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE); 
+        }
+      }
+
+      break; // STATE_WORLDMAP
+    case STATE_GAMEMENU:
+      break; // STATE_GAMEMENU
   }
 
   display1.setCursor(0, 120);
-  display1.println(">" + String(map_min));
+  display1.println("X" + String(world_x));
   display1.setCursor(32, 120);
-  display1.println("<" + String(map_max));
+  display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
   display1.println(format_number(counter));
+  display1.setCursor(32, 128);
+  display1.println("D" + String(ai_world_dir));
 
   // write the buffer to the display
   display1.display();
