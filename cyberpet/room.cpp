@@ -186,6 +186,45 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
     }
   }
 
+  // Check for room corner rounding on natural areas
+  if (!is_constructed) {
+    if (
+      wall_map[1][1] == ROOM_FLOOR &&
+      wall_map[1][2] == ROOM_FLOOR &&
+      wall_map[2][1] == ROOM_FLOOR &&
+      wall_map[2][2] == ROOM_FLOOR
+    ) {
+      wall_map[1][1] = ROOM_WALL;
+    }
+
+    if (
+      wall_map[MAP_W - 3][1] == ROOM_FLOOR &&
+      wall_map[MAP_W - 3][2] == ROOM_FLOOR &&
+      wall_map[MAP_W - 2][1] == ROOM_FLOOR &&
+      wall_map[MAP_W - 2][2] == ROOM_FLOOR
+    ) {
+      wall_map[MAP_W - 2][1] = ROOM_WALL;
+    }
+
+    if (
+      wall_map[1][MAP_H - 3] == ROOM_FLOOR &&
+      wall_map[1][MAP_H - 2] == ROOM_FLOOR &&
+      wall_map[2][MAP_H - 3] == ROOM_FLOOR &&
+      wall_map[2][MAP_H - 2] == ROOM_FLOOR
+    ) {
+      wall_map[1][MAP_H - 2] = ROOM_WALL;
+    }
+
+    if (
+      wall_map[MAP_W - 3][MAP_H - 3] == ROOM_FLOOR &&
+      wall_map[MAP_W - 3][MAP_H - 2] == ROOM_FLOOR &&
+      wall_map[MAP_W - 2][MAP_H - 3] == ROOM_FLOOR &&
+      wall_map[MAP_W - 2][MAP_H - 2] == ROOM_FLOOR
+    ) {
+      wall_map[MAP_W - 2][MAP_H - 2] = ROOM_WALL;
+    }
+  }
+
   // Clear map center tile
   wall_map[4][7] = ROOM_FLOOR;
 
