@@ -27,10 +27,12 @@ int area_x = 1; // 3x3 rooms in world tile
 int area_y = 1;
 int room_x = 4; // Player positon in room
 int room_y = 7;
-bool new_room = true;
+
 int ai_world_dir = 0;
 int ai_room_dir = 0;
+byte last_door = 0;
 
+bool new_room = true;
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
 
@@ -187,7 +189,10 @@ void loop() {
           if (rand_dir == 3) { ai_world_dir = DIR_S; }
           if (rand_dir == 4) { ai_world_dir = DIR_W; }
 
-          if (! (room_exits & ai_world_dir)) { ai_world_dir = 0; }
+          if (! (room_exits & ai_world_dir) || last_door & ai_world_dir) {
+            // Selected door does not exist in room or leads to last visited room
+            ai_world_dir = 0;
+          }
         }
 
         // Navigate player in current room
@@ -226,6 +231,7 @@ void loop() {
       if (room_y == 0) {
         // North
         room_y = MAP_H - 2;
+        last_door = EXIT_S;
         new_room = true;
 
         area_y--;
@@ -236,6 +242,7 @@ void loop() {
       } else if (room_y == MAP_H - 1) {
         // South
         room_y = 1;
+        last_door = EXIT_N;
         new_room = true;
 
         area_y++;
@@ -246,6 +253,7 @@ void loop() {
       } else if (room_x == 0) {
         // West
         room_x = MAP_W - 2;
+        last_door = EXIT_E;
         new_room = true;
 
         area_x--;
@@ -256,6 +264,7 @@ void loop() {
       } else if (room_x == MAP_W - 1) {
         // East
         room_x = 1;
+        last_door = EXIT_W;
         new_room = true;
 
         area_x++;
