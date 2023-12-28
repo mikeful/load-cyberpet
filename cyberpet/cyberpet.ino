@@ -213,16 +213,13 @@ void loop() {
           if (i == room_x && j == room_y) {
             // Draw player
             tile = 326;
-            display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
           } else {
             // Draw room tile
-            /*if (room_exit_map[i][j] < 30) {
-              display1.setCursor(i * 8, 8 + (j * 8));
-              display1.println(String(min(room_exitn_map[i][j], 15), HEX));
-            } else {*/
-              tile = room_tilemap[i][j];
-              display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
-            /*}*/
+            tile = room_tilemap[i][j];
+          }
+
+          if (tile != -1) {
+            display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
           }
         }
       }

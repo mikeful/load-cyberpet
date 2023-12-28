@@ -23,7 +23,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         wall_map[i][j] = ROOM_FLOOR;
       }
 
-      tile_map[i][j] = 0;
+      tile_map[i][j] = -1;
     }
   }
 
@@ -308,7 +308,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         case ROOM_EXIT_E:
         case ROOM_EXIT_S:
         case ROOM_EXIT_W:
-          tile = 225;
+          tile = -1;
           break;
         case ROOM_WALL:
           //tile = 1512;
