@@ -217,9 +217,9 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         } else if (wall_neighbours == 1) {
           // Some wall end pillars to regular or decorative wall
           wall_map[i][j] = d6 == 6 ? ROOM_WALL_DECO : ROOM_WALL;
-        //} else if (wall_neighbours == 2) {
-            // All connecting pillars to regular or decorative wall
-        //  wall_map[i][j] = d6 == 6 ? ROOM_WALL_DECO : ROOM_WALL;
+        } else if (wall_neighbours == 2 && !is_constructed && d6 >= 4) {
+          // Some connecting pillars to decorative wall or floor in natural areas
+          wall_map[i][j] = (d6 % 2) == 0 ? ROOM_FLOOR : ROOM_WALL_DECO;
         } else {
           wall_map[i][j] = ROOM_WALL;
         }
@@ -237,9 +237,9 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
           wall_map[i][j] = ROOM_WALL_DECO;
         }
 
-        if ((wall_neighbours + deco_neighbours) == 7 && floor_neighbours == 1 && d6 == 6) {
+        if ((wall_neighbours + deco_neighbours) == 7 && floor_neighbours == 1 && d6 >= 5) {
           // Some deadend floors to decorative wall
-          wall_map[i][j] = ROOM_WALL_DECO;
+          wall_map[i][j] = (d6 % 2) == 0 ? ROOM_WALL : ROOM_WALL_DECO;
         }
       }
 
@@ -247,39 +247,47 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   }
 
   // Check for room corner rounding on natural areas
+  d6 = 1 + (squirrel_4d(world_x, world_y, area_x, area_y, room_seed + 151) % 6);
   if (!is_constructed) {
     if (
       wall_map[1][1] == ROOM_FLOOR &&
       wall_map[1][2] == ROOM_FLOOR &&
       wall_map[2][1] == ROOM_FLOOR &&
-      wall_map[2][2] == ROOM_FLOOR
+      wall_map[2][2] == ROOM_FLOOR &&
+      d6 <= 4
     ) {
       wall_map[1][1] = ROOM_WALL;
+      d6 = 1 + (squirrel_4d(world_x, world_y, area_x, area_y, room_seed + 152) % 6);
     }
 
     if (
       wall_map[MAP_W - 3][1] == ROOM_FLOOR &&
       wall_map[MAP_W - 3][2] == ROOM_FLOOR &&
       wall_map[MAP_W - 2][1] == ROOM_FLOOR &&
-      wall_map[MAP_W - 2][2] == ROOM_FLOOR
+      wall_map[MAP_W - 2][2] == ROOM_FLOOR &&
+      d6 <= 4
     ) {
       wall_map[MAP_W - 2][1] = ROOM_WALL;
+      d6 = 1 + (squirrel_4d(world_x, world_y, area_x, area_y, room_seed + 153) % 6);
     }
 
     if (
       wall_map[1][MAP_H - 3] == ROOM_FLOOR &&
       wall_map[1][MAP_H - 2] == ROOM_FLOOR &&
       wall_map[2][MAP_H - 3] == ROOM_FLOOR &&
-      wall_map[2][MAP_H - 2] == ROOM_FLOOR
+      wall_map[2][MAP_H - 2] == ROOM_FLOOR &&
+      d6 <= 4
     ) {
       wall_map[1][MAP_H - 2] = ROOM_WALL;
+      d6 = 1 + (squirrel_4d(world_x, world_y, area_x, area_y, room_seed + 154) % 6);
     }
 
     if (
       wall_map[MAP_W - 3][MAP_H - 3] == ROOM_FLOOR &&
       wall_map[MAP_W - 3][MAP_H - 2] == ROOM_FLOOR &&
       wall_map[MAP_W - 2][MAP_H - 3] == ROOM_FLOOR &&
-      wall_map[MAP_W - 2][MAP_H - 2] == ROOM_FLOOR
+      wall_map[MAP_W - 2][MAP_H - 2] == ROOM_FLOOR &&
+      d6 <= 4
     ) {
       wall_map[MAP_W - 2][MAP_H - 2] = ROOM_WALL;
     }
