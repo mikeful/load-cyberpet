@@ -82,6 +82,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   byte d6 = 0;
   byte deco_inner_walls = (5 == room_seed % 6);
   int tileset_index = 0;
+  int tile_index = 0;
 
   if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
     is_constructed = true;
@@ -308,6 +309,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         continue;
       }
 
+      d6 = 1 + (squirrel_3d(i + floor_neighbours, j + wall_neighbours, tile_type + deco_neighbours, room_seed + 371) % 6);
       if (wall_map[i][j] == ROOM_FLOOR) {
         if (floor_neighbours >= 7 && d6 == 6) {
           // Some isolated floors to decorative wall
@@ -380,10 +382,17 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
       tile = 0;
+      tile_index = get_room_tile_index(i, j, wall_map[i][j], room_seed + 615);
+
+      // Tile already filled
+      if (tile_map[i][j] != -1) {
+        continue;
+      }
+
       switch (wall_map[i][j]) {
         case ROOM_FLOOR:
-          //tile = -1;
-          tile = room_tilesets[tileset_index][ROOM_TILESET_FLOOR * 4];
+          tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_FLOOR * 4)];
+          tile_map[i][j] = tile;
           break;
         case ROOM_EXIT_N:
         case ROOM_EXIT_E:
@@ -393,9 +402,8 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
           tile = room_tilesets[tileset_index][ROOM_TILESET_EXIT * 4];
           break;
         case ROOM_WALL:
-          //tile = 1512;
-          //tile = get_world_draw_tile(world_tile_data);
-          tile = room_tilesets[tileset_index][ROOM_TILESET_WALL * 4];
+          tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_WALL * 4)];
+          tile_map[i][j] = tile;
           break;
         case ROOM_WALL_DECO:
           //tile = 1510;
@@ -469,6 +477,20 @@ int get_room_tileset_index(int world_tile_data[15], int world_x, int world_y, in
   }
 
   return 0;
+}
+
+int get_room_tile_index(int tile_x, int tile_y, byte tile_type, unsigned int seed) {
+  int tile_variation = squirrel_3d(tile_x, tile_y, tile_type, seed) % 10;
+
+  if (tile_variation <= 4) {
+    return 0; // 50%
+  } else if (tile_variation <= 6) {
+    return 1; // 20%
+  } else if (tile_variation <= 8) {
+    return 2; // 20%
+  } else {
+    return 3; // 10%
+  }
 }
 
 bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y) {
