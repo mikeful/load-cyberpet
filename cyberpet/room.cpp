@@ -419,14 +419,32 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
           tile_map[i][j] = tile;
           break;
         case ROOM_WALL_DECO:
-          //tile = 1510;
-          //tile = 0;
-          //tile = get_world_draw_tile(world_tile_data);
-          tile = room_tilesets[tileset_index][ROOM_TILESET_WALL_DECO * 4];
+          if (tile_index >= 3 && j + 1 < (MAP_H - 1) && wall_map[i][j + 1] == ROOM_WALL_DECO) {
+            // Check for 1x2 special replacements
+            tile_index = 2 * (squirrel_2d(i, j, room_seed + 241) % 2);
+            
+            tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_V_DECO * 4)];
+            tile_map[i][j] = tile;
+
+            tile = room_tilesets[tileset_index][(tile_index + 1) + (ROOM_TILESET_V_DECO * 4)];
+            tile_map[i][j + 1] = tile;
+          } else if (tile_index >= 3 && i + 1 < (MAP_W - 1) && wall_map[i + 1][j] == ROOM_WALL_DECO) {
+            // Check for 2x1 special replacements
+            tile_index = 2 * (squirrel_2d(i, j, room_seed + 243) % 2);
+            
+            tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_H_DECO * 4)];
+            tile_map[i][j] = tile;
+
+            tile = room_tilesets[tileset_index][(tile_index + 1) + (ROOM_TILESET_H_DECO * 4)];
+            tile_map[i + 1][j] = tile;
+          } else {
+            // No special replacements, fill normally
+            tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_WALL_DECO * 4)];
+            tile_map[i][j] = tile;
+          }
+          
           break;
       }
-
-      tile_map[i][j] = tile;
     }
   }
 
