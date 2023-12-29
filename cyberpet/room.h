@@ -24,13 +24,14 @@
 #define DIR_W 8
 #endif
 
+
 #define ROOM_FLOOR 0
 #define ROOM_WALL 1
-#define ROOM_EXIT_N 2
-#define ROOM_EXIT_E 3
-#define ROOM_EXIT_S 4
-#define ROOM_EXIT_W 5
-#define ROOM_WALL_DECO 6
+#define ROOM_WALL_DECO 2
+#define ROOM_EXIT_N 3
+#define ROOM_EXIT_E 4
+#define ROOM_EXIT_S 5
+#define ROOM_EXIT_W 6
 #define ROOM_PILLAR1 11
 #define ROOM_PILLAR2 12
 #define ROOM_PILLAR3 13

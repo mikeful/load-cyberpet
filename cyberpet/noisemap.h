@@ -80,7 +80,7 @@ const byte biome_matrix[9] = {
 
 // Herringbone tile pattern for world room exits
 // https://nothings.org/gamedev/herringbone/index.html
-const byte world_tile_exit_patterns [] PROGMEM = {
+const byte world_tile_exit_patterns [] = {
 	// Row 1
   EXIT_N | EXIT_E | EXIT_W,
   EXIT_N | EXIT_S | EXIT_W,
@@ -108,7 +108,7 @@ const byte world_tile_exit_patterns [] PROGMEM = {
 
 // Internally fully connected 3x3 room area, exits to next world tile is added
 // at room generation
-const byte area_room_exits [] PROGMEM = {
+const byte area_room_exits [] = {
   // Row 1
   EXIT_E | EXIT_S,
   EXIT_E | EXIT_S | EXIT_W,
