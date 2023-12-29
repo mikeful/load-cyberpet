@@ -395,11 +395,24 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
           tile_map[i][j] = tile;
           break;
         case ROOM_EXIT_N:
+          tile_index = 0;
+          tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_EXIT * 4)];
+          tile_map[i][j] = tile;
+          break;
         case ROOM_EXIT_E:
+          tile_index = 1;
+          tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_EXIT * 4)];
+          tile_map[i][j] = tile;
+          break;
         case ROOM_EXIT_S:
+          tile_index = 2;
+          tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_EXIT * 4)];
+          tile_map[i][j] = tile;
+          break;
         case ROOM_EXIT_W:
-          //tile = -1;
-          tile = room_tilesets[tileset_index][ROOM_TILESET_EXIT * 4];
+          tile_index = 3;
+          tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_EXIT * 4)];
+          tile_map[i][j] = tile;
           break;
         case ROOM_WALL:
           tile = room_tilesets[tileset_index][tile_index + (ROOM_TILESET_WALL * 4)];
