@@ -1,10 +1,86 @@
 #include "room.h"
 
+const int *room_tilesets[72] = {
+  room_tiles_dungeon1, // ROOM_TILES_DUNGEON
+  room_tiles_dungeon1,
+  room_tiles_dungeon1,
+  room_tiles_dungeon1,
+  room_tiles_sea_town1, // ROOM_TILES_SEA_TOWN
+  room_tiles_sea_town1,
+  room_tiles_sea_town1,
+  room_tiles_sea_town1,
+  room_tiles_town1, // ROOM_TILES_TOWN
+  room_tiles_town1,
+  room_tiles_town1,
+  room_tiles_town1,
+  room_tiles_sea_city1, // ROOM_TILES_SEA_CITY
+  room_tiles_sea_city1,
+  room_tiles_sea_city1,
+  room_tiles_sea_city1,
+  room_tiles_city1, // ROOM_TILES_CITY
+  room_tiles_city1,
+  room_tiles_city1,
+  room_tiles_city1,
+  room_tiles_deep_sea1, // ROOM_TILES_DEEP_SEA
+  room_tiles_deep_sea1,
+  room_tiles_deep_sea1,
+  room_tiles_deep_sea1,
+  room_tiles_sea1, // ROOM_TILES_SEA
+  room_tiles_sea1,
+  room_tiles_sea1,
+  room_tiles_sea1,
+  room_tiles_mountain1, // ROOM_TILES_MOUNTAIN
+  room_tiles_mountain1,
+  room_tiles_mountain1,
+  room_tiles_mountain1,
+  room_tiles_peak1, // ROOM_TILES_PEAK
+  room_tiles_peak1,
+  room_tiles_peak1,
+  room_tiles_peak1,
+  room_tiles_ice_field1, // ROOM_TILES_ICE_FIELD
+  room_tiles_ice_field1,
+  room_tiles_ice_field1,
+  room_tiles_ice_field1,
+  room_tiles_tundra1, // ROOM_TILES_TUNDRA
+  room_tiles_tundra1,
+  room_tiles_tundra1,
+  room_tiles_tundra1,
+  room_tiles_taiga1, // ROOM_TILES_TAIGA
+  room_tiles_taiga1,
+  room_tiles_taiga1,
+  room_tiles_taiga1,
+  room_tiles_plains1, // ROOM_TILES_PLAINS
+  room_tiles_plains1,
+  room_tiles_plains1,
+  room_tiles_plains1,
+  room_tiles_forest1, // ROOM_TILES_FOREST
+  room_tiles_forest1,
+  room_tiles_forest1,
+  room_tiles_forest1,
+  room_tiles_deep_forest1, // ROOM_TILES_DEEP_FOREST
+  room_tiles_deep_forest1,
+  room_tiles_deep_forest1,
+  room_tiles_deep_forest1,
+  room_tiles_desert1, // ROOM_TILES_DESERT
+  room_tiles_desert1,
+  room_tiles_desert1,
+  room_tiles_desert1,
+  room_tiles_savannah1, // ROOM_TILES_SAVANNAH
+  room_tiles_savannah1,
+  room_tiles_savannah1,
+  room_tiles_savannah1,
+  room_tiles_jungle1, // ROOM_TILES_JUNGLE
+  room_tiles_jungle1,
+  room_tiles_jungle1,
+  room_tiles_jungle1,
+};
+
 int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int world_x, int world_y, int world_tile_data[15], int area_x, int area_y, byte exits, unsigned int seed) {
   // Setup variables
   int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed);
   bool is_constructed = false;
   byte d6 = 0;
+  int tileset_index = 0;
 
   if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
     is_constructed = true;
@@ -297,6 +373,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   wall_map[4][7] = ROOM_FLOOR;
 
   // Pass 3: Convert wallmap to tilemap
+  tileset_index = get_room_tileset_index(world_tile_data, world_x, world_y, area_x, area_y, seed);
   unsigned int tile = 0;
   
   for (int i = 0; i < MAP_W; i++) {
@@ -304,19 +381,26 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
       tile = 0;
       switch (wall_map[i][j]) {
         case ROOM_FLOOR:
+          //tile = -1;
+          tile = room_tilesets[tileset_index][ROOM_TILESET_FLOOR * 4];
+          break;
         case ROOM_EXIT_N:
         case ROOM_EXIT_E:
         case ROOM_EXIT_S:
         case ROOM_EXIT_W:
-          tile = -1;
+          //tile = -1;
+          tile = room_tilesets[tileset_index][ROOM_TILESET_EXIT * 4];
           break;
         case ROOM_WALL:
           //tile = 1512;
-          tile = get_world_draw_tile(world_tile_data);
+          //tile = get_world_draw_tile(world_tile_data);
+          tile = room_tilesets[tileset_index][ROOM_TILESET_WALL * 4];
           break;
         case ROOM_WALL_DECO:
           //tile = 1510;
-          tile = get_world_draw_tile(world_tile_data);
+          //tile = 0;
+          //tile = get_world_draw_tile(world_tile_data);
+          tile = room_tilesets[tileset_index][ROOM_TILESET_WALL_DECO * 4];
           break;
       }
 
@@ -325,6 +409,83 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   }
 
   return 1;
+}
+
+int get_room_tileset_index(int world_tile_data[15], int world_x, int world_y, int area_x, int area_y, unsigned int seed) {
+  int set_variation = squirrel_4d(world_x, world_y, area_x, area_y, seed) % 4;
+
+  if (world_tile_data[TILE_DUNGEON] == TREASURE_DUNGEON) {
+    //tile = 1531
+    return (ROOM_TILES_DUNGEON * 4) + set_variation;
+  }
+
+  if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
+    if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
+      //tile = 1537;
+      return (ROOM_TILES_SEA_TOWN * 4) + set_variation;
+    } else {
+      //tile = 1519;
+      return (ROOM_TILES_TOWN * 4) + set_variation;
+    }
+  } else if (world_tile_data[TILE_BUILDINGS] == BULDINGS_CITY) {
+    if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
+      //tile = 1537;
+      return (ROOM_TILES_SEA_CITY * 4) + set_variation;
+    } else {
+      //tile = 1523;
+      return (ROOM_TILES_CITY * 4) + set_variation;
+    }
+  }
+
+  switch (world_tile_data[TILE_HEIGHT]) {
+    case HEIGHT_DEEP_SEA:
+      //tile = 442;
+      return (ROOM_TILES_DEEP_SEA * 4) + set_variation;
+    case HEIGHT_SEA:
+      //tile = 441;
+      return (ROOM_TILES_SEA * 4) + set_variation;
+    //case HEIGHT_SHALLOW:
+    //case HEIGHT_REGULAR:
+    //case HEIGHT_HILL:
+    case HEIGHT_MOUNTAIN:
+      //tile = 1516;
+      return (ROOM_TILES_MOUNTAIN * 4) + set_variation;
+    case HEIGHT_PEAK:
+      //tile = 1517;
+      return (ROOM_TILES_PEAK * 4) + set_variation;
+    default:
+      switch (world_tile_data[TILE_BIOME]) {
+      case BIOME_ICE_FIELD:
+        //tile = 588;
+        return (ROOM_TILES_ICE_FIELD * 4) + set_variation;
+      case BIOME_TUNDRA:
+        //tile = 434;
+        return (ROOM_TILES_TUNDRA * 4) + set_variation;
+      case BIOME_TAIGA:
+        //tile = 1511;
+        return (ROOM_TILES_TAIGA * 4) + set_variation;
+      case BIOME_PLAINS:
+        //tile = 432;
+        return (ROOM_TILES_PLAINS * 4) + set_variation;
+      case BIOME_FOREST:
+        //tile = 1512;
+        return (ROOM_TILES_FOREST * 4) + set_variation;
+      case BIOME_DEEP_FOREST:
+        //tile = 1510;
+        return (ROOM_TILES_DEEP_FOREST * 4) + set_variation;
+      case BIOME_DESERT:
+        //tile = 1920;
+        return (ROOM_TILES_DESERT * 4) + set_variation;
+      case BIOME_SAVANNAH:
+        //tile = 436;
+        return (ROOM_TILES_SAVANNAH * 4) + set_variation;
+      case BIOME_JUNGLE:
+        //tile = 1377;
+        return (ROOM_TILES_JUNGLE * 4) + set_variation;
+    }
+  }
+
+  return 0;
 }
 
 bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y) {
