@@ -80,6 +80,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed);
   bool is_constructed = false;
   byte d6 = 0;
+  byte deco_inner_walls = (5 == room_seed % 6);
   int tileset_index = 0;
 
   if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
@@ -301,7 +302,7 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         }
       }
 
-      if (wall_map[i][j] == ROOM_WALL) {
+      if (wall_map[i][j] == ROOM_WALL && deco_inner_walls) {
         // All inner walls to decorative wall, early stop
         wall_map[i][j] = ROOM_WALL_DECO;
         continue;
@@ -415,72 +416,54 @@ int get_room_tileset_index(int world_tile_data[15], int world_x, int world_y, in
   int set_variation = squirrel_4d(world_x, world_y, area_x, area_y, seed) % 4;
 
   if (world_tile_data[TILE_DUNGEON] == TREASURE_DUNGEON) {
-    //tile = 1531
     return (ROOM_TILES_DUNGEON * 4) + set_variation;
   }
 
   if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
     if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
-      //tile = 1537;
       return (ROOM_TILES_SEA_TOWN * 4) + set_variation;
     } else {
-      //tile = 1519;
       return (ROOM_TILES_TOWN * 4) + set_variation;
     }
   } else if (world_tile_data[TILE_BUILDINGS] == BULDINGS_CITY) {
     if (world_tile_data[TILE_HEIGHT] <= HEIGHT_SEA) {
-      //tile = 1537;
       return (ROOM_TILES_SEA_CITY * 4) + set_variation;
     } else {
-      //tile = 1523;
       return (ROOM_TILES_CITY * 4) + set_variation;
     }
   }
 
   switch (world_tile_data[TILE_HEIGHT]) {
     case HEIGHT_DEEP_SEA:
-      //tile = 442;
       return (ROOM_TILES_DEEP_SEA * 4) + set_variation;
     case HEIGHT_SEA:
-      //tile = 441;
       return (ROOM_TILES_SEA * 4) + set_variation;
     //case HEIGHT_SHALLOW:
     //case HEIGHT_REGULAR:
     //case HEIGHT_HILL:
     case HEIGHT_MOUNTAIN:
-      //tile = 1516;
       return (ROOM_TILES_MOUNTAIN * 4) + set_variation;
     case HEIGHT_PEAK:
-      //tile = 1517;
       return (ROOM_TILES_PEAK * 4) + set_variation;
     default:
       switch (world_tile_data[TILE_BIOME]) {
       case BIOME_ICE_FIELD:
-        //tile = 588;
         return (ROOM_TILES_ICE_FIELD * 4) + set_variation;
       case BIOME_TUNDRA:
-        //tile = 434;
         return (ROOM_TILES_TUNDRA * 4) + set_variation;
       case BIOME_TAIGA:
-        //tile = 1511;
         return (ROOM_TILES_TAIGA * 4) + set_variation;
       case BIOME_PLAINS:
-        //tile = 432;
         return (ROOM_TILES_PLAINS * 4) + set_variation;
       case BIOME_FOREST:
-        //tile = 1512;
         return (ROOM_TILES_FOREST * 4) + set_variation;
       case BIOME_DEEP_FOREST:
-        //tile = 1510;
         return (ROOM_TILES_DEEP_FOREST * 4) + set_variation;
       case BIOME_DESERT:
-        //tile = 1920;
         return (ROOM_TILES_DESERT * 4) + set_variation;
       case BIOME_SAVANNAH:
-        //tile = 436;
         return (ROOM_TILES_SAVANNAH * 4) + set_variation;
       case BIOME_JUNGLE:
-        //tile = 1377;
         return (ROOM_TILES_JUNGLE * 4) + set_variation;
     }
   }
