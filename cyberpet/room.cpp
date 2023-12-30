@@ -2,25 +2,25 @@
 
 const int *room_tilesets[72] = {
   room_tiles_dungeon1, // ROOM_TILES_DUNGEON
-  room_tiles_dungeon1,
-  room_tiles_dungeon1,
+  room_tiles_dungeon2,
+  room_tiles_dungeon2,
   room_tiles_dungeon1,
   room_tiles_sea_town1, // ROOM_TILES_SEA_TOWN
-  room_tiles_sea_town1,
-  room_tiles_sea_town1,
-  room_tiles_sea_town1,
+  room_tiles_sea_town2,
+  room_tiles_sea_town3,
+  room_tiles_sea_town4,
   room_tiles_town1, // ROOM_TILES_TOWN
   room_tiles_town1,
-  room_tiles_town1,
-  room_tiles_town1,
+  room_tiles_town2,
+  room_tiles_town3,
   room_tiles_sea_city1, // ROOM_TILES_SEA_CITY
-  room_tiles_sea_city1,
-  room_tiles_sea_city1,
-  room_tiles_sea_city1,
+  room_tiles_sea_city2,
+  room_tiles_sea_city3,
+  room_tiles_sea_city4,
   room_tiles_city1, // ROOM_TILES_CITY
-  room_tiles_city1,
-  room_tiles_city1,
-  room_tiles_city1,
+  room_tiles_city2,
+  room_tiles_city3,
+  room_tiles_city4,
   room_tiles_deep_sea1, // ROOM_TILES_DEEP_SEA
   room_tiles_deep_sea1,
   room_tiles_deep_sea1,
