@@ -80,16 +80,22 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
   int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed);
   bool is_constructed = false;
   byte d6 = 0;
-  byte deco_inner_walls = (5 == room_seed % 6);
+  bool deco_inner_walls = (5 == room_seed % 6);
   int tileset_index = 0;
   int tile_index = 0;
-
+  
+  // Flip constructed/handmade status on
   if (world_tile_data[TILE_BUILDINGS] == BULDINGS_TOWN) {
     is_constructed = true;
   } else if (world_tile_data[TILE_BUILDINGS] == BULDINGS_CITY) {
     is_constructed = true;
   } else if (world_tile_data[TILE_DUNGEON] == TREASURE_DUNGEON) {
     is_constructed = true;
+  }
+
+  // Flip it off if all inner walls will be replaced with decorative walls
+  if (deco_inner_walls) {
+    is_constructed = false;
   }
 
   // Build edge walls, clear tilemap
@@ -303,12 +309,6 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
         }
       }
 
-      if (wall_map[i][j] == ROOM_WALL && deco_inner_walls) {
-        // All inner walls to decorative wall, early stop
-        wall_map[i][j] = ROOM_WALL_DECO;
-        continue;
-      }
-
       d6 = 1 + (squirrel_3d(i + floor_neighbours, j + wall_neighbours, tile_type + deco_neighbours, room_seed + 371) % 6);
       if (wall_map[i][j] == ROOM_FLOOR) {
         if (floor_neighbours >= 7 && d6 == 6) {
@@ -316,18 +316,26 @@ int setup_room(byte wall_map[MAP_W][MAP_H], int tile_map[MAP_W][MAP_H], int worl
           wall_map[i][j] = ROOM_WALL_DECO;
         }
 
-        if ((wall_neighbours + deco_neighbours) == 7 && floor_neighbours == 1 && d6 >= 5) {
+        if (wall_neighbours == 7 && floor_neighbours == 1 && d6 >= 5) {
+          // Some deadend floors to wall
+          wall_map[i][j] = ROOM_WALL;
+        } else if ((wall_neighbours + deco_neighbours) == 7 && floor_neighbours == 1 && d6 >= 5) {
           // Some deadend floors to decorative wall
-          wall_map[i][j] = (d6 % 2) == 0 ? ROOM_WALL : ROOM_WALL_DECO;
+          wall_map[i][j] = ROOM_WALL_DECO;
         }
       }
 
+      if (wall_map[i][j] == ROOM_WALL && deco_inner_walls) {
+        // All inner walls to decorative wall, early stop
+        wall_map[i][j] = ROOM_WALL_DECO;
+        continue;
+      }
     }
   }
 
   // Check for room corner rounding on natural areas
   d6 = 1 + (squirrel_4d(world_x, world_y, area_x, area_y, room_seed + 151) % 6);
-  if (!is_constructed) {
+  if (!is_constructed && !deco_inner_walls) {
     if (
       wall_map[1][1] == ROOM_FLOOR &&
       wall_map[1][2] == ROOM_FLOOR &&
