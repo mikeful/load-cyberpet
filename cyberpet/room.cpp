@@ -50,24 +50,24 @@ const int *room_tilesets[72] = {
   room_tiles_taiga1,
   room_tiles_taiga1,
   room_tiles_plains1, // ROOM_TILES_PLAINS
-  room_tiles_plains1,
-  room_tiles_plains1,
+  room_tiles_plains2,
+  room_tiles_plains2,
   room_tiles_plains1,
   room_tiles_forest1, // ROOM_TILES_FOREST
-  room_tiles_forest1,
-  room_tiles_forest1,
+  room_tiles_forest2,
+  room_tiles_forest2,
   room_tiles_forest1,
   room_tiles_deep_forest1, // ROOM_TILES_DEEP_FOREST
-  room_tiles_deep_forest1,
-  room_tiles_deep_forest1,
+  room_tiles_deep_forest2,
+  room_tiles_deep_forest3,
   room_tiles_deep_forest1,
   room_tiles_desert1, // ROOM_TILES_DESERT
-  room_tiles_desert1,
-  room_tiles_desert1,
+  room_tiles_desert2,
+  room_tiles_desert2,
   room_tiles_desert1,
   room_tiles_savannah1, // ROOM_TILES_SAVANNAH
-  room_tiles_savannah1,
-  room_tiles_savannah1,
+  room_tiles_savannah2,
+  room_tiles_savannah2,
   room_tiles_savannah1,
   room_tiles_jungle1, // ROOM_TILES_JUNGLE
   room_tiles_jungle1,
