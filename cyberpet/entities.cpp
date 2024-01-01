@@ -40,10 +40,38 @@ int setup_room_entities(
 ) {
   // Setup variables
   int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed); // TODO unsigned int?
+  int position_tries = 0;
+  int entity_x = 0;
+  int entity_y = 0;
 
-  for (int entity_id = 1; entity_id < 7; entity_id++) {
+  for (int entity_id = 1; entity_id < 8; entity_id++) {
     // TODO Check area entity alive bitmask
-    setup_entity(entities, entity_id, room_wallmap, room_exit_navmap, world_tile_data, room_seed);
+    
+    // Select position for entity
+    entity_x = 0;
+    entity_y = 0;
+    
+    while (entity_x == 0 && entity_y == 0) {
+      entity_x = 1 + squirrel_2d(entity_id, position_tries, room_seed) % (MAP_W - 2);
+      entity_y = 1 + squirrel_2d(entity_id, position_tries + 1, room_seed) % (MAP_H - 2);
+
+      // Check that position is not occupied by other entity and is player accessible
+      if (
+        room_entity_navmap[entity_x][entity_y] == 0
+        || room_exit_navmap[entity_x][entity_y] <= 3
+        || room_exit_navmap[entity_x][entity_y] == DJIKSTRA_MAX
+      ) {
+        entity_x = 0;
+        entity_y = 0;
+      }
+
+      position_tries++;
+    }
+
+    // Mark position occupied and for entity navigation map building
+    room_entity_navmap[entity_x][entity_y] = 0;
+
+    setup_entity(entities, entity_id, entity_x, entity_y, world_tile_data, room_seed);
   }
   
   return 1;
@@ -52,8 +80,8 @@ int setup_room_entities(
 int setup_entity(
   unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
   int entity_id,
-  byte room_wallmap[MAP_W][MAP_H],
-  int room_exit_navmap[MAP_W][MAP_H],
+  int entity_x,
+  int entity_y,
   int world_tile_data[15],
   unsigned int seed
 ) {
@@ -75,9 +103,9 @@ int setup_entity(
   entities[entity_id][ENTITY_CURSED_TICKS] = 0;
   entities[entity_id][ENTITY_STUNNED_TICKS] = 0;
 
-  entities[entity_id][ENTITY_ROOM_X] = 4;
-  entities[entity_id][ENTITY_ROOM_Y] = 7;
-  entities[entity_id][ENTITY_ICON] = 343;
+  entities[entity_id][ENTITY_ROOM_X] = entity_x;
+  entities[entity_id][ENTITY_ROOM_Y] = entity_y;
+  entities[entity_id][ENTITY_ICON] = 174; //343;
 
   entities[entity_id][ENTITY_AI_PROFILE] = AI_PROFILE_NONE;
   entities[entity_id][ENTITY_AI_STATE] = AI_STATE_START;

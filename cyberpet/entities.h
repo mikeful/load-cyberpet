@@ -66,8 +66,8 @@ int setup_room_entities(
 int setup_entity(
   unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
   int entity_id,
-  byte room_wallmap[MAP_W][MAP_H],
-  int room_exit_navmap[MAP_W][MAP_H],
+  int entity_x,
+  int entity_y,
   int world_tile_data[15],
   unsigned int seed
 );

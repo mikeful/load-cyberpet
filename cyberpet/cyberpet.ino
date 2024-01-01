@@ -27,8 +27,10 @@ int world_x = 0;
 int world_y = 0;
 int area_x = 1; // 3x3 rooms in world tile
 int area_y = 1;
-int room_x = 4; // Player position in room
-int room_y = 7;
+unsigned int room_x = 4; // Player position in room
+unsigned int room_y = 7;
+unsigned int entity_x = 0;
+unsigned int entity_y = 0;
 
 int ai_world_dir = 0;
 int ai_room_dir = 0;
@@ -37,6 +39,7 @@ byte last_door = 0;
 bool new_room = true;
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
+int room_entity_tilemap[MAP_W][MAP_H];
 
 byte room_exits = 0;
 byte area_exits = 0;
@@ -49,6 +52,7 @@ int room_exitw_navmap[MAP_W][MAP_H];
 unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS];
 int room_player_navmap[MAP_W][MAP_H];
 int room_entity_navmap[MAP_W][MAP_H];
+bool update_entity_navmap = false;
 
 int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
@@ -178,19 +182,33 @@ void loop() {
           merge_djikstra_maps(room_exit_navmap, room_exite_navmap);
         }
 
+        // Setup entities and update navigation map leading to them
         clear_djikstra_map(room_entity_navmap);
         setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, world_x, world_y, world_tile_data, area_x, area_y, seed);
+        build_djikstra_map(room_entity_navmap, room_wallmap);
 
         // Setup upkeep
         ai_world_dir = 0;
         ai_room_dir = 0;
 
         new_room = false;
+      }
 
-        if (world_tile_data[TILE_LEVEL] > entities[ENTITY_ID_PLAYER][ENTITY_LEVEL]) {
-          entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = world_tile_data[TILE_LEVEL];
-          update_entity_stats(entities, ENTITY_ID_PLAYER);
+      // Update entities navigation map if needed
+      if (update_entity_navmap) {
+        clear_djikstra_map(room_entity_navmap);
+
+        for (int entity_id = 1; entity_id < 8; entity_id++) {
+          if (entities[entity_id][ENTITY_ALIVE] == 1) {
+            entity_x = entities[entity_id][ENTITY_ROOM_X];
+            entity_y = entities[entity_id][ENTITY_ROOM_Y];
+
+            room_entity_navmap[entity_x][entity_y] = 0;
+          }
         }
+
+        build_djikstra_map(room_entity_navmap, room_wallmap);
+        update_entity_navmap = false;
       }
 
       if (counter % 2 == 0) {
@@ -209,23 +227,64 @@ void loop() {
         }
 
         // Navigate player in current room
-        if (ai_world_dir == DIR_N) { ai_room_dir = get_djikstra_direction(room_exitn_navmap, room_x, room_y, seed); }
-        if (ai_world_dir == DIR_S) { ai_room_dir = get_djikstra_direction(room_exits_navmap, room_x, room_y, seed); }
-        if (ai_world_dir == DIR_W) { ai_room_dir = get_djikstra_direction(room_exitw_navmap, room_x, room_y, seed); }
-        if (ai_world_dir == DIR_E) { ai_room_dir = get_djikstra_direction(room_exite_navmap, room_x, room_y, seed); }
+        if (room_entity_navmap[4][7] < DJIKSTRA_MAX) {
+          // Entities in room, try to visit them
+          ai_room_dir = get_djikstra_direction(room_entity_navmap, room_x, room_y, seed + counter);
+        } else {
+          // No entities in room, move to next room
+          if (ai_world_dir == DIR_N) { ai_room_dir = get_djikstra_direction(room_exitn_navmap, room_x, room_y, seed + counter); }
+          if (ai_world_dir == DIR_S) { ai_room_dir = get_djikstra_direction(room_exits_navmap, room_x, room_y, seed + counter); }
+          if (ai_world_dir == DIR_W) { ai_room_dir = get_djikstra_direction(room_exitw_navmap, room_x, room_y, seed + counter); }
+          if (ai_world_dir == DIR_E) { ai_room_dir = get_djikstra_direction(room_exite_navmap, room_x, room_y, seed + counter); }
+        }
 
         if (ai_room_dir == DIR_N) { room_y--; }
         if (ai_room_dir == DIR_S) { room_y++; }
         if (ai_room_dir == DIR_W) { room_x--; }
         if (ai_room_dir == DIR_E) { room_x++; }
+
+        entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
+        entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y] = room_y;
+      }
+
+      // Collision/combat
+      for (int entity_id = 1; entity_id < 8; entity_id++) {
+        if (entities[entity_id][ENTITY_ALIVE] == 1) {
+          entity_x = entities[entity_id][ENTITY_ROOM_X];
+          entity_y = entities[entity_id][ENTITY_ROOM_Y];
+
+          if (entity_x == room_x && entity_y == room_y) {
+            entities[entity_id][ENTITY_ALIVE] = 0;
+            update_entity_navmap = true;
+
+            entities[ENTITY_ID_PLAYER][ENTITY_LEVEL]++;
+            update_entity_stats(entities, ENTITY_ID_PLAYER);
+          }
+        }
+      }
+
+      // Update entity sprite map
+      // TODO Only update if someone has moved/died/etc
+      for (int i = 0; i < MAP_W; i++) {
+        for (int j = 0; j < MAP_H; j++) {
+          room_entity_tilemap[i][j] = -1;
+        }
+      }
+      for (int entity_id = 0; entity_id < 8; entity_id++) {
+        if (entities[entity_id][ENTITY_ALIVE] == 1) {
+          entity_x = entities[entity_id][ENTITY_ROOM_X];
+          entity_y = entities[entity_id][ENTITY_ROOM_Y];
+
+          room_entity_tilemap[entity_x][entity_y] = (int)entities[entity_id][ENTITY_ICON];
+        }
       }
 
       // Draw room
       for (int i = 0; i < MAP_W; i++) {
         for (int j = 0; j < MAP_H; j++) {
-          if (i == room_x && j == room_y) {
-            // Draw player
-            tile = 326;
+          if (room_entity_tilemap[i][j] != -1) {
+            // Draw entity
+            tile = room_entity_tilemap[i][j];
           } else {
             // Draw room tile
             tile = room_tilemap[i][j];
@@ -283,6 +342,9 @@ void loop() {
           world_x++;
         }
       }
+
+      entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
+      entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y] = room_y;
 
       break; // STATE_ROOM
     case STATE_WORLDMAP:
