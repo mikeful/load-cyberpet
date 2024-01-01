@@ -180,7 +180,7 @@ void loop() {
         new_room = false;
       }
 
-      if (counter % 5 == 0) {
+      if (counter % 2 == 0) {
         // Decide next direction
         if (ai_world_dir == 0) {
           int rand_dir = 1 + (squirrel_2d(world_x, world_y, seed + counter) % 4);
@@ -288,7 +288,7 @@ void loop() {
             tile = get_world_draw_tile(world_tile_data);
           }
 
-          display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE); 
+          display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
         }
       }
 
@@ -305,7 +305,7 @@ void loop() {
   display1.setCursor(0, 128);
   display1.println(String(world_tile_data[TILE_DENSITY]));
   display1.setCursor(32, 128);
-  display1.println(format_number(counter));
+  display1.println(format_number4(counter));
 
   // write the buffer to the display
   display1.display();
