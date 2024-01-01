@@ -187,8 +187,10 @@ void loop() {
 
         new_room = false;
 
-        entities[0][ENTITY_LEVEL]++;
-        update_entity_stats(entities, 0);
+        if (world_tile_data[TILE_LEVEL] > entities[ENTITY_ID_PLAYER][ENTITY_LEVEL]) {
+          entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = world_tile_data[TILE_LEVEL];
+          update_entity_stats(entities, ENTITY_ID_PLAYER);
+        }
       }
 
       if (counter % 2 == 0) {
@@ -314,7 +316,7 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  display1.println(format_number3(entities[0][ENTITY_LEVEL]) + " +" + format_number3(get_entity_max_hp(entities, 0)));
+  display1.println(format_number3(entities[ENTITY_ID_PLAYER][ENTITY_LEVEL]) + " +" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
   //display1.setCursor(32, 128);
   //display1.println(format_number4(counter));
 

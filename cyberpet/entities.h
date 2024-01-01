@@ -9,6 +9,8 @@
 #define ENTITY_SIZE 8
 #define ENTITY_ATTRS 15
 
+#define ENTITY_ID_PLAYER 0
+
 #define ENTITY_STR 0
 #define ENTITY_DEX 1
 #define ENTITY_INT 2

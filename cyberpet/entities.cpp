@@ -1,13 +1,14 @@
 #include "entities.h"
 
 int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]) {
-  int entity_id = 0;
+  int entity_id = ENTITY_ID_PLAYER;
   int equipment_id = 20; // 7/20 hp testing
+  int equipment_tier = 0;
 
-  entities[entity_id][ENTITY_STR] = get_equip_stat(equipment_id, STAT_STR, 5);
-  entities[entity_id][ENTITY_DEX] = get_equip_stat(equipment_id, STAT_DEX, 5);
-  entities[entity_id][ENTITY_INT] = get_equip_stat(equipment_id, STAT_INT, 5);
-  entities[entity_id][ENTITY_VIT] = get_equip_stat(equipment_id, STAT_VIT, 5);
+  entities[entity_id][ENTITY_STR] = get_equip_stat(equipment_id, STAT_STR, equipment_tier);
+  entities[entity_id][ENTITY_DEX] = get_equip_stat(equipment_id, STAT_DEX, equipment_tier);
+  entities[entity_id][ENTITY_INT] = get_equip_stat(equipment_id, STAT_INT, equipment_tier);
+  entities[entity_id][ENTITY_VIT] = get_equip_stat(equipment_id, STAT_VIT, equipment_tier);
   entities[entity_id][ENTITY_LEVEL] = 1;
 
   entities[entity_id][ENTITY_ALIVE] = 1;
@@ -56,7 +57,7 @@ int setup_entity(
   int world_tile_data[15],
   unsigned int seed
 ) {
-  if (entity_id == 0) { return 0; }
+  if (entity_id == ENTITY_ID_PLAYER) { return 0; }
 
   int equipment_id = 1 + (squirrel(entity_id, seed) % 23); // TODO define max item count
 
@@ -88,7 +89,7 @@ int setup_entity(
 
 unsigned int get_entity_stat(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, byte stat) {
   float stat_growth = statpoint_growth_enemy;
-  if (entity_id == 0) {
+  if (entity_id == ENTITY_ID_PLAYER) {
     stat_growth = statpoint_growth_player;
   }
 
