@@ -22,8 +22,9 @@
 #define ENTITY_STUNNED_TICKS 10
 #define ENTITY_ROOM_X 11
 #define ENTITY_ROOM_Y 12
-#define ENTITY_AI_PROFILE 13
-#define ENTITY_AI_STATE 14
+#define ENTITY_ICON 13
+#define ENTITY_AI_PROFILE 14
+#define ENTITY_AI_STATE 15
 #endif
 
 #ifndef AI_PROFILE_NONE
@@ -45,12 +46,29 @@
 #include "room.h"
 #include "items.h"
 
-const float statpoint_growth_player = 1.07;
-const float statpoint_growth_enemy = 1.09;
-const unsigned int hp_base = 98;
+const float statpoint_growth_player = 1.11;
+const float statpoint_growth_enemy = 1.13;
+const unsigned int hp_base = 98; // +1 vit + modified main stat = min 100
 
 int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]);
-int setup_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, int world_tile_data[15], int world_x, int world_y, int area_x, int area_y, unsigned int seed);
+int setup_room_entities(
+  unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
+  byte room_wallmap[MAP_W][MAP_H],
+  int room_exit_navmap[MAP_W][MAP_H],
+  int room_entity_navmap[MAP_W][MAP_H],
+  int world_x, int world_y,
+  int world_tile_data[15],
+  int area_x, int area_y,
+  unsigned int seed
+);
+int setup_entity(
+  unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  byte room_wallmap[MAP_W][MAP_H],
+  int room_exit_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+);
 int update_entity_stats(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
 unsigned int get_entity_stat(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, byte stat);
 int get_main_stat(unsigned int stat_str, unsigned int stat_dex, unsigned int stat_int);

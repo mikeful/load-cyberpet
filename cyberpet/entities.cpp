@@ -2,12 +2,12 @@
 
 int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]) {
   int entity_id = 0;
-  int equipment_id = 20;
+  int equipment_id = 20; // 7/20 hp testing
 
-  entities[entity_id][ENTITY_STR] = get_equip_stat(equipment_id, STAT_STR);
-  entities[entity_id][ENTITY_DEX] = get_equip_stat(equipment_id, STAT_DEX);
-  entities[entity_id][ENTITY_INT] = get_equip_stat(equipment_id, STAT_INT);
-  entities[entity_id][ENTITY_VIT] = get_equip_stat(equipment_id, STAT_VIT);
+  entities[entity_id][ENTITY_STR] = get_equip_stat(equipment_id, STAT_STR, 5);
+  entities[entity_id][ENTITY_DEX] = get_equip_stat(equipment_id, STAT_DEX, 5);
+  entities[entity_id][ENTITY_INT] = get_equip_stat(equipment_id, STAT_INT, 5);
+  entities[entity_id][ENTITY_VIT] = get_equip_stat(equipment_id, STAT_VIT, 5);
   entities[entity_id][ENTITY_LEVEL] = 1;
 
   entities[entity_id][ENTITY_ALIVE] = 1;
@@ -17,6 +17,8 @@ int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]) {
 
   entities[entity_id][ENTITY_ROOM_X] = 4;
   entities[entity_id][ENTITY_ROOM_Y] = 7;
+  entities[entity_id][ENTITY_ICON] = 326;
+
   entities[entity_id][ENTITY_AI_PROFILE] = AI_PROFILE_NONE;
   entities[entity_id][ENTITY_AI_STATE] = AI_STATE_START;
 
@@ -25,23 +27,57 @@ int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]) {
   return 1;
 }
 
-int setup_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, int world_tile_data[15], int world_x, int world_y, int area_x, int area_y, unsigned int seed) {
+int setup_room_entities(
+  unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
+  byte room_wallmap[MAP_W][MAP_H],
+  int room_exit_navmap[MAP_W][MAP_H],
+  int room_entity_navmap[MAP_W][MAP_H],
+  int world_x, int world_y,
+  int world_tile_data[15],
+  int area_x, int area_y,
+  unsigned int seed
+) {
+  // Setup variables
   int room_seed = squirrel_4d(world_x, world_y, area_x, area_y, seed); // TODO unsigned int?
-  int equipment_id = 1 + (squirrel(entity_id, room_seed) % 23); // TODO define max items count
 
+  for (int entity_id = 1; entity_id < 7; entity_id++) {
+    // TODO Check area entity alive bitmask
+    setup_entity(entities, entity_id, room_wallmap, room_exit_navmap, world_tile_data, room_seed);
+  }
+  
+  return 1;
+}
+
+int setup_entity(
+  unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  byte room_wallmap[MAP_W][MAP_H],
+  int room_exit_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+) {
+  if (entity_id == 0) { return 0; }
+
+  int equipment_id = 1 + (squirrel(entity_id, seed) % 23); // TODO define max item count
+
+  bool is_elite = false; // +3 levels, gold+loot
+  bool is_boss = false; // +5 levels, gold+loot
+
+  entities[entity_id][ENTITY_LEVEL] = (unsigned int)world_tile_data[TILE_LEVEL];
   entities[entity_id][ENTITY_STR] = get_equip_stat(equipment_id, STAT_STR);
   entities[entity_id][ENTITY_DEX] = get_equip_stat(equipment_id, STAT_DEX);
   entities[entity_id][ENTITY_INT] = get_equip_stat(equipment_id, STAT_INT);
   entities[entity_id][ENTITY_VIT] = get_equip_stat(equipment_id, STAT_VIT);
-  entities[entity_id][ENTITY_LEVEL] = world_tile_data[TILE_LEVEL];
 
-  entities[entity_id][ENTITY_ALIVE] = 1; // TODO Check area alive bitmask
+  entities[entity_id][ENTITY_ALIVE] = 1;
   entities[entity_id][ENTITY_BLESSED_TICKS] = 0;
   entities[entity_id][ENTITY_CURSED_TICKS] = 0;
   entities[entity_id][ENTITY_STUNNED_TICKS] = 0;
 
   entities[entity_id][ENTITY_ROOM_X] = 4;
   entities[entity_id][ENTITY_ROOM_Y] = 7;
+  entities[entity_id][ENTITY_ICON] = 343;
+
   entities[entity_id][ENTITY_AI_PROFILE] = AI_PROFILE_NONE;
   entities[entity_id][ENTITY_AI_STATE] = AI_STATE_START;
 
@@ -57,7 +93,8 @@ unsigned int get_entity_stat(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], i
   }
 
   float level = (float)entities[entity_id][ENTITY_LEVEL];
-  return (unsigned int)pow(stat_growth, (float)entities[entity_id][stat] * level);
+  float stat_value = (float)entities[entity_id][stat];
+  return (unsigned int)(stat_value * pow(stat_growth, level));
 }
 
 int update_entity_stats(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {
