@@ -11,6 +11,8 @@
 #include "tileset.h"
 #include "noisemap.h"
 #include "room.h"
+#include "items.h"
+#include "entities.h"
 
 #define STATE_START 0
 #define STATE_MAINMENU 1
@@ -25,7 +27,7 @@ int world_x = 0;
 int world_y = 0;
 int area_x = 1; // 3x3 rooms in world tile
 int area_y = 1;
-int room_x = 4; // Player positon in room
+int room_x = 4; // Player position in room
 int room_y = 7;
 
 int ai_world_dir = 0;
@@ -47,8 +49,7 @@ int room_exitw_map[MAP_W][MAP_H];
 int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
 
-int map_min = 999;
-int map_max = 0;
+unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS];
 
 unsigned int counter = 1;
 
@@ -132,6 +133,7 @@ void loop() {
 
   switch(game_state) {
     case STATE_START:
+      setup_player_entity(entities);
       game_state = STATE_ROOM;
 
       break; // STATE_START
@@ -140,15 +142,12 @@ void loop() {
     case STATE_ROOM:
       // Setup new room if entered
       if (new_room) {
-        //Serial.println("Start room generation: X" + String(world_x) + " Y" + String(world_y) + ", x" + String(area_x) +  " y" + String(area_y));
-
         // Get current world tile and area
         get_world_tile(world_tile_data, world_x, world_y, 0, seed);
-        area_exits = get_area_exits(world_x, world_y);
-        room_exits = get_room_exits(area_x, area_y);
-        //room_exits = 15;
 
         // Add area exits to room exits on edges
+        area_exits = get_area_exits(world_x, world_y);
+        room_exits = get_room_exits(area_x, area_y);
         if (area_x == 1 && area_y == 0) { room_exits = room_exits | area_exits; }
         if (area_x == 2 && area_y == 1) { room_exits = room_exits | area_exits; }
         if (area_x == 1 && area_y == 2) { room_exits = room_exits | area_exits; }
@@ -156,6 +155,8 @@ void loop() {
 
         // Setup player visible room
         setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, seed);
+
+        // Setup player navigation maps
         build_djikstra_map(room_exitn_map, room_wallmap, 4, 0);
         build_djikstra_map(room_exits_map, room_wallmap, 4, MAP_H - 1);
         build_djikstra_map(room_exitw_map, room_wallmap, 0, 7);
@@ -177,7 +178,11 @@ void loop() {
 
         ai_world_dir = 0;
         ai_room_dir = 0;
+
         new_room = false;
+
+        entities[0][ENTITY_LEVEL]++;
+        update_entity_stats(entities, 0);
       }
 
       if (counter % 2 == 0) {
@@ -303,9 +308,9 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  display1.println(String(world_tile_data[TILE_DENSITY]));
-  display1.setCursor(32, 128);
-  display1.println(format_number4(counter));
+  display1.println(format_number3(entities[0][ENTITY_LEVEL]) + " +" + format_number3(get_entity_max_hp(entities, 0)));
+  //display1.setCursor(32, 128);
+  //display1.println(format_number4(counter));
 
   // write the buffer to the display
   display1.display();
