@@ -592,6 +592,12 @@ int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_
   // Set goal tile value
   djikstra_map[goal_x][goal_y] = 0;
 
+  return build_djikstra_map(djikstra_map, wall_map);
+}
+
+int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]) {
+  // Expecting that djikstra_map is already set up with goal tiles
+
   // Calculate map tile values
   bool map_changed = true;
   int neighbour_value = DJIKSTRA_MAX;
