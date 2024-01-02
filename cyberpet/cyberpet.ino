@@ -7,6 +7,7 @@
 #include "lora32_pins.h"
 
 #include "toolbox.h"
+#include "player.h"
 #include "medievalish_chonker_mono.h"
 #include "tileset.h"
 #include "noisemap.h"
@@ -22,6 +23,11 @@
 
 int seed = 0;
 byte game_state = STATE_START;
+unsigned int player_level = 1;
+unsigned int player_exp = 0;
+unsigned int player_exp_multiplier = 1;
+int level_ups = 0;
+
 unsigned int tile = 0;
 int world_x = 0;
 int world_y = 0;
@@ -139,7 +145,7 @@ void loop() {
 
   switch(game_state) {
     case STATE_START:
-      setup_player_entity(entities);
+      setup_player_entity(entities, player_level);
       game_state = STATE_ROOM;
 
       break; // STATE_START
@@ -257,8 +263,11 @@ void loop() {
             entities[entity_id][ENTITY_ALIVE] = 0;
             update_entity_navmap = true;
 
-            entities[ENTITY_ID_PLAYER][ENTITY_LEVEL]++;
-            update_entity_stats(entities, ENTITY_ID_PLAYER);
+            level_ups = gain_exp(entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, seed+counter);
+            if (level_ups > 0) {
+              entities[ENTITY_ID_PLAYER][ENTITY_LEVEL];
+              update_entity_stats(entities, ENTITY_ID_PLAYER);
+            }
           }
         }
       }
@@ -378,7 +387,7 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  display1.println(format_number3(entities[ENTITY_ID_PLAYER][ENTITY_LEVEL]) + " +" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
+  display1.println(format_number3(player_level) + " " + format_number4(player_exp_multiplier));
   //display1.setCursor(32, 128);
   //display1.println(format_number4(counter));
 

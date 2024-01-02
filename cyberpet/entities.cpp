@@ -1,6 +1,6 @@
 #include "entities.h"
 
-int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]) {
+int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level) {
   int entity_id = ENTITY_ID_PLAYER;
   int equipment_id = 20; // 7/20 hp testing
   int equipment_tier = 0;
@@ -9,7 +9,7 @@ int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]) {
   entities[entity_id][ENTITY_DEX] = get_equip_stat(equipment_id, STAT_DEX, equipment_tier);
   entities[entity_id][ENTITY_INT] = get_equip_stat(equipment_id, STAT_INT, equipment_tier);
   entities[entity_id][ENTITY_VIT] = get_equip_stat(equipment_id, STAT_VIT, equipment_tier);
-  entities[entity_id][ENTITY_LEVEL] = 1;
+  entities[entity_id][ENTITY_LEVEL] = player_level;
 
   entities[entity_id][ENTITY_ALIVE] = 1;
   entities[entity_id][ENTITY_BLESSED_TICKS] = 0;

@@ -52,7 +52,7 @@ const float statpoint_growth_player = 1.11;
 const float statpoint_growth_enemy = 1.13;
 const unsigned int hp_base = 98; // +1 vit + modified main stat = min 100
 
-int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS]);
+int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level);
 int setup_room_entities(
   unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
   byte room_wallmap[MAP_W][MAP_H],
