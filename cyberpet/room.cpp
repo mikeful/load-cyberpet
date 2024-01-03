@@ -635,23 +635,34 @@ int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_
 }
 
 int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed) {
+  return get_djikstra_direction(djikstra_map, tile_x, tile_y, 0, seed);
+}
+
+int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, int target_distance, unsigned int seed) {
+  int map_value = DJIKSTRA_MAX;
   int tile_value = DJIKSTRA_MAX;
   int current_lowest = DJIKSTRA_MAX;
   int current_dir = 0;
 
   int d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 893) % 4);
 
+  // Check current, no move if already in target
+  map_value = get_djikstra_value(djikstra_map, tile_x, tile_y);
+  if (map_value == target_distance) { return current_dir; }
+
   // Check west
-  tile_value = get_djikstra_value(djikstra_map, tile_x - 1, tile_y);
-  if (tile_value < current_lowest) {
+  map_value = get_djikstra_value(djikstra_map, tile_x - 1, tile_y);
+  tile_value = abs(map_value - target_distance);
+  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_W;
   }
-  if (tile_value == 0) { return current_dir; }
+  if (map_value == target_distance) { return current_dir; }
 
   // Check east
-  tile_value = get_djikstra_value(djikstra_map, tile_x + 1, tile_y);
-  if (tile_value < current_lowest) {
+  map_value = get_djikstra_value(djikstra_map, tile_x + 1, tile_y);
+  tile_value = abs(map_value - target_distance);
+  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_E;
   } else if (tile_value == current_lowest && d4 >= 2) {
@@ -661,11 +672,12 @@ int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_
 
     d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 620 + tile_value) % 4);
   }
-  if (tile_value == 0) { return current_dir; }
+  if (map_value == target_distance) { return current_dir; }
   
   // Check north
-  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y - 1);
-  if (tile_value < current_lowest) {
+  map_value = get_djikstra_value(djikstra_map, tile_x, tile_y - 1);
+  tile_value = abs(map_value - target_distance);
+  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_N;
   } else if (tile_value == current_lowest && d4 >= 2) {
@@ -675,11 +687,12 @@ int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_
 
     d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 389 + tile_value) % 4);
   }
-  if (tile_value == 0) { return current_dir; }
+  if (map_value == target_distance) { return current_dir; }
   
   // Check south
-  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y + 1);
-  if (tile_value < current_lowest) {
+  map_value = get_djikstra_value(djikstra_map, tile_x, tile_y + 1);
+  tile_value = abs(map_value - target_distance);
+  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_S;
   } else if (tile_value == current_lowest && d4 >= 2) {
@@ -689,7 +702,7 @@ int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_
 
     d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 547 + tile_value) % 4);
   }
-  if (tile_value == 0) { return current_dir; }
+  if (map_value == target_distance) { return current_dir; }
 
   // Reset direction selection if lowest found value is non-valid
   if (current_lowest == DJIKSTRA_MAX) {

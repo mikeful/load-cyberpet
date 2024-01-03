@@ -160,5 +160,6 @@ int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_
 int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]);
 int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]);
 int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed);
+int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, int target_distance, unsigned int seed);
 
 #endif
