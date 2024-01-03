@@ -70,6 +70,18 @@ int volt = 0;
 int volt2 = 0;
 int progress = 0;
 float XS = 0.0025;
+// ADC resolution
+const int resolution = 12;
+const int adcMax = pow(2, resolution) - 1;
+const float adcMaxVoltage = 3.3;
+// On-board voltage divider
+const int R1 = 390;
+const int R2 = 100;
+// Calibration measurements
+const float measuredVoltage = 4.2;
+const float reportedVoltage = 4.095;
+// Calibration factor
+const float batFactor = (adcMaxVoltage / adcMax) * ((R1 + R2)/(float)R2) * (measuredVoltage / reportedVoltage);
 
 Adafruit_SSD1306 display1(128, 64, &Wire, 21, 500000UL);
 
@@ -110,38 +122,26 @@ void setup() {
 void loop() {
   counter++;
 
-  // clear the display
-  display1.clearDisplay();
-
-  /*
   // Battery stuff
-  // ADC resolution
-  const int resolution = 12;
-  const int adcMax = pow(2, resolution) - 1;
-  const float adcMaxVoltage = 3.3;
-  // On-board voltage divider
-  const int R1 = 390;
-  const int R2 = 100;
-  // Calibration measurements
-  const float measuredVoltage = 4.2;
-  const float reportedVoltage = 4.095;
-  // Calibration factor
-  const float factor = (adcMaxVoltage / adcMax) * ((R1 + R2)/(float)R2) * (measuredVoltage / reportedVoltage);
   digitalWrite(ADC_Ctrl, LOW);
   delay(10);
   int analogValue = analogRead(VBAT_Read);
   digitalWrite(ADC_Ctrl, HIGH);
 
-  float floatVoltage = factor * analogValue;
+  float floatVoltage = batFactor * (float)analogValue;
   uint16_t voltage = (int)(floatVoltage * 1000.0);
+  progress = map(voltage, 2200, 4200, 0, 100);
 
-  progress = int((floatVoltage / 4.2) * 100);
+  /*
   display1->drawProgressBar(1, 64, 62, 10, progress);
   display1->setTextAlignment(TEXT_ALIGN_CENTER);
   display1->drawString(32, 15, String(progress) + "%");
   display1->setTextAlignment(TEXT_ALIGN_CENTER);
   display1->drawString(32, 5, String(floatVoltage) + "V");
   */
+
+  // Clear the display
+  display1.clearDisplay();
 
   switch(game_state) {
     case STATE_START:
