@@ -22,6 +22,10 @@ int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], unsign
 
   entities[entity_id][ENTITY_AI_PROFILE] = AI_PROFILE_NONE;
   entities[entity_id][ENTITY_AI_STATE] = AI_STATE_START;
+  entities[entity_id][ENTITY_AI_DATA1] = 0;
+  entities[entity_id][ENTITY_AI_DATA2] = 0;
+  entities[entity_id][ENTITY_AI_DATA3] = 0;
+  entities[entity_id][ENTITY_AI_DATA4] = 0;
 
   update_entity_stats(entities, 0);
 
@@ -109,6 +113,10 @@ int setup_entity(
 
   entities[entity_id][ENTITY_AI_PROFILE] = AI_PROFILE_NONE;
   entities[entity_id][ENTITY_AI_STATE] = AI_STATE_START;
+  entities[entity_id][ENTITY_AI_DATA1] = 0;
+  entities[entity_id][ENTITY_AI_DATA2] = 0;
+  entities[entity_id][ENTITY_AI_DATA3] = 0;
+  entities[entity_id][ENTITY_AI_DATA4] = 0;
 
   update_entity_stats(entities, entity_id);
 

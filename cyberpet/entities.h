@@ -27,10 +27,16 @@
 #define ENTITY_ICON 13
 #define ENTITY_AI_PROFILE 14
 #define ENTITY_AI_STATE 15
+#define ENTITY_AI_DATA1 16 // Generic AI profile/state data fields
+#define ENTITY_AI_DATA2 17
+#define ENTITY_AI_DATA3 18
+#define ENTITY_AI_DATA4 19
 #endif
 
 #ifndef AI_PROFILE_NONE
 #define AI_PROFILE_NONE 0 // Stands still and no reactions, loot containers/obstacles
+#define AI_PROFILE_MELEE 1 // Seek and stay next to player after detection
+#define AI_PROFILE_RANGED 2 // Seek and stay close to player after detection, flee if next to player
 
 #define AI_STATE_START 0
 #define AI_STATE_IDLE 1
