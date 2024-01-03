@@ -21,7 +21,8 @@
 #define STATE_WORLDMAP 3
 #define STATE_GAMEMENU 4
 
-int seed = 0;
+int content_seed = 0; // Determines world content, keep same
+int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
 byte game_state = STATE_START;
 unsigned int player_level = 1;
 unsigned int player_exp = 0;
@@ -140,6 +141,9 @@ void loop() {
   display1->drawString(32, 5, String(floatVoltage) + "V");
   */
 
+  // Mess action random seed with battery value
+  action_seed += analogValue;
+
   // Clear the display
   display1.clearDisplay();
 
@@ -155,7 +159,7 @@ void loop() {
       // Setup new room if entered
       if (new_room) {
         // Get current world tile and area
-        get_world_tile(world_tile_data, world_x, world_y, 0, seed);
+        get_world_tile(world_tile_data, world_x, world_y, 0, content_seed);
 
         // Add area exits to room exits on edges
         area_exits = get_area_exits(world_x, world_y);
@@ -166,7 +170,7 @@ void loop() {
         if (area_x == 0 && area_y == 1) { room_exits = room_exits | area_exits; }
 
         // Setup player visible room
-        setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, seed);
+        setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, content_seed);
 
         // Setup player navigation maps
         build_djikstra_map(room_exitn_navmap, room_wallmap, 4, 0);
@@ -213,7 +217,7 @@ void loop() {
       if (counter % 2 == 0) {
         // Decide next direction
         if (ai_world_dir == 0) {
-          int rand_dir = 1 + (squirrel_2d(world_x, world_y, seed + counter) % 4);
+          int rand_dir = 1 + (squirrel_2d(world_x, world_y, action_seed + counter) % 4);
           if (rand_dir == 1) { ai_world_dir = DIR_N; }
           if (rand_dir == 2) { ai_world_dir = DIR_E; }
           if (rand_dir == 3) { ai_world_dir = DIR_S; }
@@ -261,7 +265,7 @@ void loop() {
             entities[entity_id][ENTITY_ALIVE] = 0;
             update_entity_navmap = true;
 
-            level_ups = gain_exp(entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, seed+counter);
+            level_ups = gain_exp(entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
             if (level_ups > 0) {
               entities[ENTITY_ID_PLAYER][ENTITY_LEVEL];
               update_entity_stats(entities, ENTITY_ID_PLAYER);
@@ -355,8 +359,8 @@ void loop() {
 
       break; // STATE_ROOM
     case STATE_WORLDMAP:
-      //int ok = get_simple_noisemap(noisemap2d, 0, counter, MAP_W, MAP_H, seed, 0.3);
-      //int ok = get_simple_noisemap3d(noisemap2d, 0, counter, 0, MAP_W, MAP_H, seed, 0.3);
+      //int ok = get_simple_noisemap(noisemap2d, 0, counter, MAP_W, MAP_H, content_seed, 0.3);
+      //int ok = get_simple_noisemap3d(noisemap2d, 0, counter, 0, MAP_W, MAP_H, content_seed, 0.3);
 
       for (int i = 0; i < MAP_W; i++) {
         for (int j = 0; j < MAP_H; j++) {
@@ -366,7 +370,7 @@ void loop() {
             tile = 326;
           } else {
             // Draw map tile
-            get_world_tile(world_tile_data, i + (world_x - 4), j + (world_y - 7), 0, seed);
+            get_world_tile(world_tile_data, i + (world_x - 4), j + (world_y - 7), 0, content_seed);
             tile = get_world_draw_tile(world_tile_data);
           }
 
