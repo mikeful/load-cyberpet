@@ -63,7 +63,7 @@ int setup_room_entities(
       if (
         room_entity_navmap[entity_x][entity_y] == 0
         || room_exit_navmap[entity_x][entity_y] <= 3
-        || room_exit_navmap[entity_x][entity_y] == DJIKSTRA_MAX
+        || room_exit_navmap[entity_x][entity_y] == DIJKSTRA_MAX
       ) {
         entity_x = 0;
         entity_y = 0;

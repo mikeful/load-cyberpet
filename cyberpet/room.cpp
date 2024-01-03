@@ -547,42 +547,42 @@ bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y) {
   }
 }
 
-int clear_djikstra_map(int djikstra_map[MAP_W][MAP_H]) {
+int clear_dijkstra_map(int dijkstra_map[MAP_W][MAP_H]) {
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
-      djikstra_map[i][j] = DJIKSTRA_MAX;
+      dijkstra_map[i][j] = DIJKSTRA_MAX;
     }
   }
 
   return 1;
 }
 
-int get_djikstra_value(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
-  if (tile_x < 0 || tile_x > MAP_W - 1) { return DJIKSTRA_MAX; }
-  if (tile_y < 0 || tile_y > MAP_H - 1) { return DJIKSTRA_MAX; }
+int get_dijkstra_value(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
+  if (tile_x < 0 || tile_x > MAP_W - 1) { return DIJKSTRA_MAX; }
+  if (tile_y < 0 || tile_y > MAP_H - 1) { return DIJKSTRA_MAX; }
 
-  return djikstra_map[tile_x][tile_y];
+  return dijkstra_map[tile_x][tile_y];
 }
 
-int get_djikstra_lowest(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
-  int tile_value = DJIKSTRA_MAX;
-  int current_lowest = DJIKSTRA_MAX;
+int get_dijkstra_lowest(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y) {
+  int tile_value = DIJKSTRA_MAX;
+  int current_lowest = DIJKSTRA_MAX;
 
-  tile_value = get_djikstra_value(djikstra_map, tile_x - 1, tile_y);
+  tile_value = get_dijkstra_value(dijkstra_map, tile_x - 1, tile_y);
   if (tile_value < current_lowest) {current_lowest = tile_value;}
-  tile_value = get_djikstra_value(djikstra_map, tile_x + 1, tile_y);
+  tile_value = get_dijkstra_value(dijkstra_map, tile_x + 1, tile_y);
   if (tile_value < current_lowest) {current_lowest = tile_value;}
-  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y - 1);
+  tile_value = get_dijkstra_value(dijkstra_map, tile_x, tile_y - 1);
   if (tile_value < current_lowest) {current_lowest = tile_value;}
-  tile_value = get_djikstra_value(djikstra_map, tile_x, tile_y + 1);
+  tile_value = get_dijkstra_value(dijkstra_map, tile_x, tile_y + 1);
   if (tile_value < current_lowest) {current_lowest = tile_value;}
 
   return current_lowest;
 }
 
-int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y) {
+int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y) {
   // Clear current map
-  clear_djikstra_map(djikstra_map);
+  clear_dijkstra_map(dijkstra_map);
 
   // Sanity check that goal is not inside a wall
   if (!room_tile_walkable(wall_map, goal_x, goal_y)) {
@@ -590,17 +590,17 @@ int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_
   }
 
   // Set goal tile value
-  djikstra_map[goal_x][goal_y] = 0;
+  dijkstra_map[goal_x][goal_y] = 0;
 
-  return build_djikstra_map(djikstra_map, wall_map);
+  return build_dijkstra_map(dijkstra_map, wall_map);
 }
 
-int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]) {
-  // Expecting that djikstra_map is already set up with goal tiles
+int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]) {
+  // Expecting that dijkstra_map is already set up with goal tiles
 
   // Calculate map tile values
   bool map_changed = true;
-  int neighbour_value = DJIKSTRA_MAX;
+  int neighbour_value = DIJKSTRA_MAX;
 
   while (map_changed) {
     map_changed = false;
@@ -608,10 +608,10 @@ int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_
     for (int i = 0; i < MAP_W; i++) {
       for (int j = 0; j < MAP_H; j++) {
         if (room_tile_walkable(wall_map, i, j)) {
-          neighbour_value = get_djikstra_lowest(djikstra_map, i, j);
+          neighbour_value = get_dijkstra_lowest(dijkstra_map, i, j);
 
-          if (djikstra_map[i][j] > neighbour_value + 1) {
-            djikstra_map[i][j] = neighbour_value + 1;
+          if (dijkstra_map[i][j] > neighbour_value + 1) {
+            dijkstra_map[i][j] = neighbour_value + 1;
             map_changed = true;
           }
         }
@@ -622,7 +622,7 @@ int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_
   return 1;
 }
 
-int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]) {
+int merge_dijkstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]) {
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
       if (input1_map[i][j] < output_map[i][j]) {
@@ -634,35 +634,35 @@ int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_
   return 1;
 }
 
-int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed) {
-  return get_djikstra_direction(djikstra_map, tile_x, tile_y, 0, seed);
+int get_dijkstra_direction(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed) {
+  return get_dijkstra_direction(dijkstra_map, tile_x, tile_y, 0, seed);
 }
 
-int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, int target_distance, unsigned int seed) {
-  int map_value = DJIKSTRA_MAX;
-  int tile_value = DJIKSTRA_MAX;
-  int current_lowest = DJIKSTRA_MAX;
+int get_dijkstra_direction(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y, int target_distance, unsigned int seed) {
+  int map_value = DIJKSTRA_MAX;
+  int tile_value = DIJKSTRA_MAX;
+  int current_lowest = DIJKSTRA_MAX;
   int current_dir = 0;
 
   int d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 893) % 4);
 
   // Check current, no move if already in target
-  map_value = get_djikstra_value(djikstra_map, tile_x, tile_y);
+  map_value = get_dijkstra_value(dijkstra_map, tile_x, tile_y);
   if (map_value == target_distance) { return current_dir; }
 
   // Check west
-  map_value = get_djikstra_value(djikstra_map, tile_x - 1, tile_y);
+  map_value = get_dijkstra_value(dijkstra_map, tile_x - 1, tile_y);
   tile_value = abs(map_value - target_distance);
-  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
+  if (map_value < DIJKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_W;
   }
   if (map_value == target_distance) { return current_dir; }
 
   // Check east
-  map_value = get_djikstra_value(djikstra_map, tile_x + 1, tile_y);
+  map_value = get_dijkstra_value(dijkstra_map, tile_x + 1, tile_y);
   tile_value = abs(map_value - target_distance);
-  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
+  if (map_value < DIJKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_E;
   } else if (tile_value == current_lowest && d4 >= 2) {
@@ -675,9 +675,9 @@ int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_
   if (map_value == target_distance) { return current_dir; }
   
   // Check north
-  map_value = get_djikstra_value(djikstra_map, tile_x, tile_y - 1);
+  map_value = get_dijkstra_value(dijkstra_map, tile_x, tile_y - 1);
   tile_value = abs(map_value - target_distance);
-  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
+  if (map_value < DIJKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_N;
   } else if (tile_value == current_lowest && d4 >= 2) {
@@ -690,9 +690,9 @@ int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_
   if (map_value == target_distance) { return current_dir; }
   
   // Check south
-  map_value = get_djikstra_value(djikstra_map, tile_x, tile_y + 1);
+  map_value = get_dijkstra_value(dijkstra_map, tile_x, tile_y + 1);
   tile_value = abs(map_value - target_distance);
-  if (map_value < DJIKSTRA_MAX && tile_value < current_lowest) {
+  if (map_value < DIJKSTRA_MAX && tile_value < current_lowest) {
     current_lowest = tile_value;
     current_dir = DIR_S;
   } else if (tile_value == current_lowest && d4 >= 2) {
@@ -705,7 +705,7 @@ int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_
   if (map_value == target_distance) { return current_dir; }
 
   // Reset direction selection if lowest found value is non-valid
-  if (current_lowest == DJIKSTRA_MAX) {
+  if (current_lowest == DIJKSTRA_MAX) {
     current_dir = 0;
   }
 

@@ -45,7 +45,7 @@
 #define ROOM_PILLAR9 19
 #define ROOM_PILLAR10 20
 
-#define DJIKSTRA_MAX 255
+#define DIJKSTRA_MAX 255
 
 #define ROOM_TILESET_SIZE 24
 #define ROOM_TILESET_FLOOR 0
@@ -154,12 +154,12 @@ int get_room_tileset_index(int world_tile_data[15], int world_x, int world_y, in
 int get_room_tile_index(int tile_x, int tile_y, byte tile_type, unsigned int seed);
 bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y);
 
-int clear_djikstra_map(int djikstra_map[MAP_W][MAP_H]);
-int get_djikstra_lowest(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y);
-int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y);
-int build_djikstra_map(int djikstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]);
-int merge_djikstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]);
-int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed);
-int get_djikstra_direction(int djikstra_map[MAP_W][MAP_H], int tile_x, int tile_y, int target_distance, unsigned int seed);
+int clear_dijkstra_map(int dijkstra_map[MAP_W][MAP_H]);
+int get_dijkstra_lowest(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y);
+int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y);
+int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]);
+int merge_dijkstra_maps(int output_map[MAP_W][MAP_H], int input1_map[MAP_W][MAP_H]);
+int get_dijkstra_direction(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y, unsigned int seed);
+int get_dijkstra_direction(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y, int distance, unsigned int seed);
 
 #endif

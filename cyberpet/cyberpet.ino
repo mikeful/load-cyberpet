@@ -173,21 +173,21 @@ void loop() {
         setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, content_seed);
 
         // Setup player navigation maps
-        build_djikstra_map(room_exitn_navmap, room_wallmap, 4, 0);
-        build_djikstra_map(room_exits_navmap, room_wallmap, 4, MAP_H - 1);
-        build_djikstra_map(room_exitw_navmap, room_wallmap, 0, 7);
-        build_djikstra_map(room_exite_navmap, room_wallmap, MAP_W - 1, 7);
+        build_dijkstra_map(room_exitn_navmap, room_wallmap, 4, 0);
+        build_dijkstra_map(room_exits_navmap, room_wallmap, 4, MAP_H - 1);
+        build_dijkstra_map(room_exitw_navmap, room_wallmap, 0, 7);
+        build_dijkstra_map(room_exite_navmap, room_wallmap, MAP_W - 1, 7);
 
-        clear_djikstra_map(room_exit_navmap);
-        if (room_exits & EXIT_N) { merge_djikstra_maps(room_exit_navmap, room_exitn_navmap); }
-        if (room_exits & EXIT_S) { merge_djikstra_maps(room_exit_navmap, room_exits_navmap); }
-        if (room_exits & EXIT_W) { merge_djikstra_maps(room_exit_navmap, room_exitw_navmap); }
-        if (room_exits & EXIT_E) { merge_djikstra_maps(room_exit_navmap, room_exite_navmap); }
+        clear_dijkstra_map(room_exit_navmap);
+        if (room_exits & EXIT_N) { merge_dijkstra_maps(room_exit_navmap, room_exitn_navmap); }
+        if (room_exits & EXIT_S) { merge_dijkstra_maps(room_exit_navmap, room_exits_navmap); }
+        if (room_exits & EXIT_W) { merge_dijkstra_maps(room_exit_navmap, room_exitw_navmap); }
+        if (room_exits & EXIT_E) { merge_dijkstra_maps(room_exit_navmap, room_exite_navmap); }
 
         // Setup entities and update navigation map leading to them
-        clear_djikstra_map(room_entity_navmap);
-        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, world_x, world_y, world_tile_data, area_x, area_y, seed);
-        build_djikstra_map(room_entity_navmap, room_wallmap);
+        clear_dijkstra_map(room_entity_navmap);
+        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, world_x, world_y, world_tile_data, area_x, area_y, content_seed);
+        build_dijkstra_map(room_entity_navmap, room_wallmap);
         update_entity_navmap = false;
 
         // Setup upkeep
@@ -199,7 +199,7 @@ void loop() {
 
       // Update entities navigation map if needed
       if (update_entity_navmap) {
-        clear_djikstra_map(room_entity_navmap);
+        clear_dijkstra_map(room_entity_navmap);
 
         for (int entity_id = 1; entity_id < 8; entity_id++) {
           if (entities[entity_id][ENTITY_ALIVE] == 1) {
@@ -210,7 +210,7 @@ void loop() {
           }
         }
 
-        build_djikstra_map(room_entity_navmap, room_wallmap);
+        build_dijkstra_map(room_entity_navmap, room_wallmap);
         update_entity_navmap = false;
       }
 
@@ -231,19 +231,19 @@ void loop() {
 
         // Navigate player in current room
         if (
-          room_entity_navmap[4][0] < DJIKSTRA_MAX
-          || room_entity_navmap[4][MAP_H - 2] < DJIKSTRA_MAX
-          || room_entity_navmap[0][7] < DJIKSTRA_MAX
-          || room_entity_navmap[MAP_W - 2][7] < DJIKSTRA_MAX
+          room_entity_navmap[4][0] < DIJKSTRA_MAX
+          || room_entity_navmap[4][MAP_H - 2] < DIJKSTRA_MAX
+          || room_entity_navmap[0][7] < DIJKSTRA_MAX
+          || room_entity_navmap[MAP_W - 2][7] < DIJKSTRA_MAX
         ) {
           // Entities in room, try to visit them
-          ai_room_dir = get_djikstra_direction(room_entity_navmap, room_x, room_y, seed + counter);
+          ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, action_seed + counter);
         } else {
           // No entities in room, move to next room
-          if (ai_world_dir == DIR_N) { ai_room_dir = get_djikstra_direction(room_exitn_navmap, room_x, room_y, seed + counter); }
-          if (ai_world_dir == DIR_S) { ai_room_dir = get_djikstra_direction(room_exits_navmap, room_x, room_y, seed + counter); }
-          if (ai_world_dir == DIR_W) { ai_room_dir = get_djikstra_direction(room_exitw_navmap, room_x, room_y, seed + counter); }
-          if (ai_world_dir == DIR_E) { ai_room_dir = get_djikstra_direction(room_exite_navmap, room_x, room_y, seed + counter); }
+          if (ai_world_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
+          if (ai_world_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
+          if (ai_world_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
+          if (ai_world_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
         }
 
         if (ai_room_dir == DIR_N) { room_y--; }
