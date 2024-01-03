@@ -175,23 +175,16 @@ void loop() {
         build_djikstra_map(room_exite_navmap, room_wallmap, MAP_W - 1, 7);
 
         clear_djikstra_map(room_exit_navmap);
-        if (room_exits & EXIT_N) {
-          merge_djikstra_maps(room_exit_navmap, room_exitn_navmap);
-        }
-        if (room_exits & EXIT_S) {
-          merge_djikstra_maps(room_exit_navmap, room_exits_navmap);
-        }
-        if (room_exits & EXIT_W) {
-          merge_djikstra_maps(room_exit_navmap, room_exitw_navmap);
-        }
-        if (room_exits & EXIT_E) {
-          merge_djikstra_maps(room_exit_navmap, room_exite_navmap);
-        }
+        if (room_exits & EXIT_N) { merge_djikstra_maps(room_exit_navmap, room_exitn_navmap); }
+        if (room_exits & EXIT_S) { merge_djikstra_maps(room_exit_navmap, room_exits_navmap); }
+        if (room_exits & EXIT_W) { merge_djikstra_maps(room_exit_navmap, room_exitw_navmap); }
+        if (room_exits & EXIT_E) { merge_djikstra_maps(room_exit_navmap, room_exite_navmap); }
 
         // Setup entities and update navigation map leading to them
         clear_djikstra_map(room_entity_navmap);
         setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, world_x, world_y, world_tile_data, area_x, area_y, seed);
         build_djikstra_map(room_entity_navmap, room_wallmap);
+        update_entity_navmap = false;
 
         // Setup upkeep
         ai_world_dir = 0;
@@ -233,7 +226,12 @@ void loop() {
         }
 
         // Navigate player in current room
-        if (room_entity_navmap[4][7] < DJIKSTRA_MAX) {
+        if (
+          room_entity_navmap[4][0] < DJIKSTRA_MAX
+          || room_entity_navmap[4][MAP_H - 2] < DJIKSTRA_MAX
+          || room_entity_navmap[0][7] < DJIKSTRA_MAX
+          || room_entity_navmap[MAP_W - 2][7] < DJIKSTRA_MAX
+        ) {
           // Entities in room, try to visit them
           ai_room_dir = get_djikstra_direction(room_entity_navmap, room_x, room_y, seed + counter);
         } else {
