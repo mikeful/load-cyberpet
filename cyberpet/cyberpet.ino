@@ -59,6 +59,7 @@ int room_exitw_navmap[MAP_W][MAP_H];
 uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS];
 int room_player_navmap[MAP_W][MAP_H];
 int room_entity_navmap[MAP_W][MAP_H];
+bool update_player_navmap = false;
 bool update_entity_navmap = false;
 
 int noisemap[MAP_W][MAP_H];
@@ -256,13 +257,21 @@ void loop() {
           if (ai_world_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
         }
 
-        if (ai_room_dir == DIR_N) { room_y--; }
-        if (ai_room_dir == DIR_S) { room_y++; }
-        if (ai_room_dir == DIR_W) { room_x--; }
-        if (ai_room_dir == DIR_E) { room_x++; }
+        if (ai_room_dir == DIR_N) { room_y--; update_player_navmap = true; }
+        if (ai_room_dir == DIR_S) { room_y++; update_player_navmap = true; }
+        if (ai_room_dir == DIR_W) { room_x--; update_player_navmap = true; }
+        if (ai_room_dir == DIR_E) { room_x++; update_player_navmap = true; }
 
         entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
         entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y] = room_y;
+      }
+
+      // Update player navigation map if needed
+      if (update_player_navmap) {
+        clear_dijkstra_map(room_player_navmap);
+        room_player_navmap[room_x][room_y] = 0;
+        build_dijkstra_map(room_player_navmap, room_wallmap);
+        update_player_navmap = false;
       }
 
       // Collision/combat
