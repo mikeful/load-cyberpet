@@ -56,7 +56,7 @@ int room_exite_navmap[MAP_W][MAP_H];
 int room_exits_navmap[MAP_W][MAP_H];
 int room_exitw_navmap[MAP_W][MAP_H];
 
-unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS];
+uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS];
 int room_player_navmap[MAP_W][MAP_H];
 int room_entity_navmap[MAP_W][MAP_H];
 bool update_entity_navmap = false;

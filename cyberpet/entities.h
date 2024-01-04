@@ -56,11 +56,11 @@
 
 const float statpoint_growth_player = 1.11;
 const float statpoint_growth_enemy = 1.13;
-const unsigned int hp_base = 98; // +1 vit + modified main stat = min 100
+const uint64_t hp_base = 98; // +1 vit + modified main stat = min 100
 
-int setup_player_entity(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level);
+int setup_player_entity(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level);
 int setup_room_entities(
-  unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   byte room_wallmap[MAP_W][MAP_H],
   int room_exit_navmap[MAP_W][MAP_H],
   int room_entity_navmap[MAP_W][MAP_H],
@@ -70,20 +70,20 @@ int setup_room_entities(
   unsigned int seed
 );
 int setup_entity(
-  unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS],
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   int entity_id,
   int entity_x,
   int entity_y,
   int world_tile_data[15],
   unsigned int seed
 );
-int update_entity_stats(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
-unsigned int get_entity_stat(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, byte stat);
-int get_main_stat(unsigned int stat_str, unsigned int stat_dex, unsigned int stat_int);
-int get_main_stat(unsigned int stats[4]);
-unsigned get_entity_max_hp(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
-unsigned get_entity_max_sp(unsigned int entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
-unsigned int get_max_hp(unsigned int stat_str, unsigned int stat_dex, unsigned int stat_int, unsigned int stat_vit);
-unsigned int get_max_sp(unsigned int stat_str, unsigned int stat_dex, unsigned int stat_int, unsigned int stat_vit);
+int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
+uint64_t get_entity_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, byte stat);
+byte get_main_stat(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
+byte get_main_stat(uint64_t stats[4]);
+uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
+uint64_t get_entity_max_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
+uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
+uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
 
 #endif
