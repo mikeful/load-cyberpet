@@ -391,9 +391,8 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  display1.println(format_number3(player_level) + " " + format_number4(player_exp_multiplier));
-  //display1.setCursor(32, 128);
-  //display1.println(format_number4(counter));
+  const uint64_t add = 10000;
+  display1.println(format_number4((uint64_t)counter * add));
 
   // write the buffer to the display
   display1.display();
