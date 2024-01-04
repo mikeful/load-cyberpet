@@ -1,9 +1,9 @@
 #include "player.h"
 
-int gain_exp(int target_level, unsigned int *level, unsigned int *experience, unsigned int *multiplier, unsigned int seed) {
+int gain_exp(int target_level, unsigned int *level, uint64_t *experience, unsigned int *multiplier, unsigned int seed) {
   int level_ups = 0;
   unsigned int multiplier_bonus = 0;
-  unsigned int level_up_req = get_level_exp_req(*level);
+  uint64_t level_up_req = get_level_exp_req(*level + 1);
 
   unsigned int gain = get_exp_gain(target_level, *multiplier);
   *experience += gain;
@@ -29,8 +29,8 @@ unsigned int get_exp_gain(int target_level, int multiplier) {
   return (unsigned int)multiplier * base_gain;
 }
 
-unsigned int get_level_exp_req(int level) {
-  return (unsigned int)(exp_base * pow(exp_growth, (float)level));
+uint64_t get_level_exp_req(int level) {
+  return (uint64_t)(exp_base * pow(exp_growth, (float)level));
 }
 
 unsigned int get_level_up_bonus(int level, int current_multiplier, unsigned int seed) {

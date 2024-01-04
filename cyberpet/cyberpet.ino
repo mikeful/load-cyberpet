@@ -25,7 +25,7 @@ int content_seed = 0; // Determines world content, keep same
 int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
 byte game_state = STATE_START;
 unsigned int player_level = 1;
-unsigned int player_exp = 0;
+uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
 int level_ups = 0;
 
@@ -269,7 +269,7 @@ void loop() {
 
             level_ups = gain_exp(entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
             if (level_ups > 0) {
-              entities[ENTITY_ID_PLAYER][ENTITY_LEVEL];
+              entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
               update_entity_stats(entities, ENTITY_ID_PLAYER);
             }
           }
@@ -391,8 +391,7 @@ void loop() {
   display1.println("Y" + String(world_y));
 
   display1.setCursor(0, 128);
-  const uint64_t add = 10000;
-  display1.println(format_number4((uint64_t)counter * add));
+  display1.println(format_number3(player_exp) + "/" + format_number4(get_level_exp_req(player_level + 1)));
 
   // write the buffer to the display
   display1.display();
