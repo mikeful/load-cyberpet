@@ -64,6 +64,7 @@ int setup_room_entities(
   byte room_wallmap[MAP_W][MAP_H],
   int room_exit_navmap[MAP_W][MAP_H],
   int room_entity_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_x, int world_y,
   int world_tile_data[15],
   int area_x, int area_y,
@@ -78,8 +79,12 @@ int setup_entity(
   unsigned int seed
 );
 
-int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
 uint64_t get_entity_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, byte stat);
+int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
+uint64_t modify_entity_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, long long change_amount);
+uint64_t modify_entity_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, long long change_amount);
+int process_regen_tick(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
+
 byte get_main_stat(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
 byte get_main_stat(uint64_t stats[4]);
 byte get_entity_main_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
@@ -87,13 +92,26 @@ uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int ent
 uint64_t get_entity_max_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
 
 uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
+uint64_t get_max_hp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
+int get_hp_gain_regen_tick(byte main_stat);
+
 uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
+uint64_t get_max_sp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
+int get_sp_gain_damage_in(byte main_stat);
+int get_sp_gain_damage_out(byte main_stat);
+int get_sp_gain_regen_tick(byte main_stat);
+
+int get_attack_base_damage(byte main_stat);
+uint64_t get_attack_damage_stat(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
+uint64_t get_armor_rating(byte main_stat);
+int get_attack_count(byte main_stat);
 
 int update_ai_state(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   int entity_id,
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 );
@@ -102,6 +120,7 @@ int run_ai_state_movement(
   int entity_id,
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 );
@@ -110,7 +129,15 @@ int run_ai_state_action(
   int entity_id,
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_tile_data[15],
+  unsigned int seed
+);
+
+int resolve_combat(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int attacker_id,
+  int defender_id,
   unsigned int seed
 );
 

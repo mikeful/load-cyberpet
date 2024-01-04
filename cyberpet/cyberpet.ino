@@ -62,6 +62,7 @@ int room_exitw_navmap[MAP_W][MAP_H];
 uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS];
 int room_player_navmap[MAP_W][MAP_H];
 int room_entity_navmap[MAP_W][MAP_H];
+int room_entity_idmap[MAP_W][MAP_H];
 bool update_player_navmap = true;
 bool update_entity_navmap = false; // Room generation updates at start
 
@@ -72,6 +73,8 @@ unsigned int counter = 1;
 unsigned int tile = 0;
 unsigned int check_entity_x = 0;
 unsigned int check_entity_y = 0;
+int combat_result = 0;
+bool combat = false;
 
 // Battery stuff
 int volt = 0;
@@ -116,13 +119,14 @@ void setup() {
   adcAttachPin(VBAT_Read); // default ADC_11db
   analogReadResolution(12);
 
-  //Serial.begin(115200);
+  Serial.begin(115200);
 
   // Setup game
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
       room_wallmap[i][j] = 0;
       room_tilemap[i][j] = 0;
+      room_entity_idmap[i][j] = 0;
     }
   }
 
@@ -203,7 +207,12 @@ void loop() {
 
         // Setup entities and update navigation map leading to them
         clear_dijkstra_map(room_entity_navmap);
-        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, world_x, world_y, world_tile_data, area_x, area_y, content_seed);
+        for (int i = 0; i < MAP_W; i++) {
+          for (int j = 0; j < MAP_H; j++) {
+            room_entity_idmap[i][j] = 0;
+          }
+        }
+        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, room_entity_idmap, world_x, world_y, world_tile_data, area_x, area_y, content_seed);
         build_dijkstra_map(room_entity_navmap, room_wallmap);
         update_entity_navmap = false;
 
@@ -217,6 +226,11 @@ void loop() {
       // Update entities navigation map if needed
       if (update_entity_navmap) {
         clear_dijkstra_map(room_entity_navmap);
+        for (int i = 0; i < MAP_W; i++) {
+          for (int j = 0; j < MAP_H; j++) {
+            room_entity_idmap[i][j] = 0;
+          }
+        }
 
         for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
           if (entities[entity_id][ENTITY_ALIVE] == 1) {
@@ -224,6 +238,7 @@ void loop() {
             check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
             room_entity_navmap[check_entity_x][check_entity_y] = 0;
+            room_entity_idmap[check_entity_x][check_entity_y] = entity_id;
           }
         }
 
@@ -251,20 +266,23 @@ void loop() {
         }
 
         // Navigate player in current room
-        if (
-          room_entity_navmap[4][0] < DIJKSTRA_MAX
-          || room_entity_navmap[4][MAP_H - 2] < DIJKSTRA_MAX
-          || room_entity_navmap[0][7] < DIJKSTRA_MAX
-          || room_entity_navmap[MAP_W - 2][7] < DIJKSTRA_MAX
-        ) {
-          // Entities in room, try to visit them
-          ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, action_seed + counter);
-        } else {
-          // No entities in room, move to next room
-          if (area_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
-          else if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
-          else if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
-          else if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
+        ai_room_dir = 0;
+        if (entities[ENTITY_ID_PLAYER][ENTITY_HP] >= get_entity_max_hp(entities, ENTITY_ID_PLAYER)) {
+          if ( 
+            room_entity_navmap[4][0] < DIJKSTRA_MAX
+            || room_entity_navmap[4][MAP_H - 2] < DIJKSTRA_MAX
+            || room_entity_navmap[0][7] < DIJKSTRA_MAX
+            || room_entity_navmap[MAP_W - 2][7] < DIJKSTRA_MAX
+          ) {
+            // Entities in room, try to visit them
+            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 1, action_seed + counter);
+          } else {
+            // No entities in room, move to next room
+            if (area_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
+            else if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
+            else if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
+            else if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
+          }
         }
 
         if (ai_room_dir == DIR_N) { room_y--; update_player_navmap = true; }
@@ -289,12 +307,12 @@ void loop() {
         for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
           // Update AI state
           int state_update_result = update_ai_state(
-            entities, entity_id, room_entity_navmap, room_player_navmap, world_tile_data, action_seed + counter + (unsigned int)entity_id
+            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, world_tile_data, action_seed + counter + (unsigned int)entity_id
           );
 
           // Run AI state movement
           state_update_result = run_ai_state_movement(
-            entities, entity_id, room_entity_navmap, room_player_navmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 539
+            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 539
           );
           if (state_update_result) { update_entity_navmap = true; }
 
@@ -307,21 +325,37 @@ void loop() {
         }
       }
 
+      // Regen tick
+      if (counter % 4 == 0) {
+        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
+          process_regen_tick(entities, entity_id);
+        }
+      }
+
       // Temp collision/combat
+      combat = true;
+      combat_result = 0;
       for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
-        if (entities[entity_id][ENTITY_ALIVE] == 1) {
+        if (combat && entities[entity_id][ENTITY_ALIVE] == 1) {
           check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
           check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
-          if (check_entity_x == room_x && check_entity_y == room_y) {
-            entities[entity_id][ENTITY_ALIVE] = 0;
-            update_entity_navmap = true;
+          //if (check_entity_x == room_x && check_entity_y == room_y) {
+          if (abs((int)check_entity_x - (int)room_x) + abs((int)check_entity_y - (int)room_y) == 1) {
+            combat_result = resolve_combat(entities, ENTITY_ID_PLAYER, entity_id, action_seed + counter + (unsigned int)entity_id);
+            if (combat_result == 1) {
+              // Enemy died
+              level_ups = gain_exp((int)entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
 
-            level_ups = gain_exp((int)entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
-            if (level_ups > 0) {
-              entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
-              update_entity_stats(entities, ENTITY_ID_PLAYER);
+              if (level_ups > 0) {
+                entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
+                update_entity_stats(entities, ENTITY_ID_PLAYER);
+              }
+
+              update_entity_navmap = true;
             }
+
+            combat = false;
           }
         }
       }
@@ -406,6 +440,24 @@ void loop() {
         }
       }
 
+      if (combat_result == 2) {
+        // Adventurer died
+        player_level = 1;
+        player_exp = 0;
+        //player_exp_multiplier = 1;
+        setup_player_entity(entities, player_level);
+
+        world_x = 0;
+        world_y = 0;
+        area_x = 1;
+        area_y = 1;
+        room_x = 4;
+        room_y = 7;
+        last_door = 0;
+
+        new_room = true;
+      }
+
       entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
       entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y] = room_y;
 
@@ -436,12 +488,10 @@ void loop() {
   }
 
   display1.setCursor(0, 120);
-  display1.println("X" + String(world_x));
-  display1.setCursor(32, 120);
-  display1.println("Y" + String(world_y));
+  display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]) + " " + format_number3(entities[ENTITY_ID_PLAYER][ENTITY_SP]));
 
   display1.setCursor(0, 128);
-  display1.println(format_number3(player_exp) + "/" + format_number4(get_level_exp_req(player_level + 1)));
+  display1.println(format_number3(player_level) + " " + format_number4(player_exp));
 
   // write the buffer to the display
   display1.display();

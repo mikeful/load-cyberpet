@@ -2,7 +2,7 @@
 
 int setup_player_entity(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level) {
   int entity_id = ENTITY_ID_PLAYER;
-  int equipment_id = 20; // 7/20 hp testing
+  int equipment_id = 21; // 7/21 hp testing
   int equipment_tier = 0;
 
   entities[entity_id][ENTITY_STR] = (uint64_t)get_equip_stat(equipment_id, STAT_STR, equipment_tier);
@@ -27,7 +27,7 @@ int setup_player_entity(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned i
   entities[entity_id][ENTITY_AI_DATA3] = 0;
   entities[entity_id][ENTITY_AI_DATA4] = 0;
 
-  update_entity_stats(entities, 0);
+  update_entity_stats(entities, entity_id);
 
   return 1;
 }
@@ -37,6 +37,7 @@ int setup_room_entities(
   byte room_wallmap[MAP_W][MAP_H],
   int room_exit_navmap[MAP_W][MAP_H],
   int room_entity_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_x, int world_y,
   int world_tile_data[15],
   int area_x, int area_y,
@@ -74,6 +75,7 @@ int setup_room_entities(
 
     // Mark position occupied and for entity navigation map building
     room_entity_navmap[entity_x][entity_y] = 0;
+    room_entity_idmap[entity_x][entity_y] = entity_id;
 
     setup_entity(entities, entity_id, entity_x, entity_y, world_tile_data, room_seed);
   }
@@ -175,6 +177,81 @@ int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity
   return 1;
 }
 
+uint64_t modify_entity_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, long long change_amount) {
+  uint64_t stat_str = get_entity_stat(entities, entity_id, STAT_STR);
+  uint64_t stat_dex = get_entity_stat(entities, entity_id, STAT_DEX);
+  uint64_t stat_int = get_entity_stat(entities, entity_id, STAT_INT);
+  uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
+
+  uint64_t max_hp = get_max_hp(stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t current_hp = entities[entity_id][ENTITY_HP];
+
+  if (change_amount > 0) {
+    if (current_hp + change_amount > max_hp) {
+      entities[entity_id][ENTITY_HP] = max_hp;
+    } else {
+      entities[entity_id][ENTITY_HP] = current_hp + change_amount;
+    }
+  } else if (change_amount < 0) {
+    if (current_hp < abs(change_amount)) {
+      entities[entity_id][ENTITY_HP] = 0;
+      entities[entity_id][ENTITY_ALIVE] = 0;
+    } else {
+      entities[entity_id][ENTITY_HP] = current_hp + change_amount;
+    }
+  }
+
+  return entities[entity_id][ENTITY_HP];
+}
+
+uint64_t modify_entity_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, long long change_amount) {
+  uint64_t stat_str = get_entity_stat(entities, entity_id, STAT_STR);
+  uint64_t stat_dex = get_entity_stat(entities, entity_id, STAT_DEX);
+  uint64_t stat_int = get_entity_stat(entities, entity_id, STAT_INT);
+  uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
+
+  uint64_t max_sp = get_max_sp(stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t current_sp = entities[entity_id][ENTITY_SP];
+
+  if (change_amount > 0) {
+    if (current_sp + change_amount > max_sp) {
+      entities[entity_id][ENTITY_SP] = max_sp;
+    } else {
+      entities[entity_id][ENTITY_SP] = current_sp + change_amount;
+    }
+  } else if (change_amount < 0) {
+    if (current_sp < abs(change_amount)) {
+      entities[entity_id][ENTITY_SP] = 0;
+    } else {
+      entities[entity_id][ENTITY_SP] = current_sp + change_amount;
+    }
+  }
+
+  return entities[entity_id][ENTITY_SP];
+}
+
+int process_regen_tick(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {
+  if (entities[entity_id][ENTITY_ALIVE] != 1) { return 0; }
+
+  uint64_t stat_str = get_entity_stat(entities, entity_id, STAT_STR);
+  uint64_t stat_dex = get_entity_stat(entities, entity_id, STAT_DEX);
+  uint64_t stat_int = get_entity_stat(entities, entity_id, STAT_INT);
+  uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
+  byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
+
+  uint64_t max_hp = get_max_hp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t hp_gain_regen = (uint64_t)get_hp_gain_regen_tick(main_stat);
+  uint64_t hp_gain = max((uint64_t)1, (max_hp / 10) * hp_gain_regen);
+  modify_entity_hp(entities, entity_id, (long long)hp_gain);
+
+  uint64_t max_sp = get_max_sp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t sp_gain_regen = (uint64_t)get_sp_gain_regen_tick(main_stat);
+  uint64_t sp_gain = max((uint64_t)1, (max_sp / 10) * sp_gain_regen);
+  modify_entity_sp(entities, entity_id, (long long)sp_gain);
+
+  return 1;
+}
+
 byte get_main_stat(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int) {
   uint64_t stats[] = {stat_str, stat_dex, stat_int};
   return get_main_stat(stats);
@@ -224,6 +301,10 @@ uint64_t get_entity_max_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int ent
 uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
+  return get_max_hp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
+}
+
+uint64_t get_max_hp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
   switch(main_stat) {
     case STAT_STR:
       return hp_base + stat_vit + (stat_str * stat_vit);
@@ -239,9 +320,29 @@ uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uin
   return hp_base + (stat_vit * 2);
 }
 
+int get_hp_gain_regen_tick(byte main_stat) {
+  switch(main_stat) {
+    case STAT_STR:
+      return 1;
+    break;
+    case STAT_DEX:
+      return 3;
+    break;
+    case STAT_INT:
+      return 2;
+    break;
+  }
+
+  return 2;
+}
+
 uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
+  return get_max_sp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
+}
+
+uint64_t get_max_sp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
   switch(main_stat) {
     case STAT_STR:
       return (stat_str + stat_vit) * 1;
@@ -257,18 +358,110 @@ uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uin
   return stat_vit;
 }
 
+int get_sp_gain_damage_in(byte main_stat) {
+  if (main_stat == STAT_STR) { return 3; }
+  return 0;
+}
+
+int get_sp_gain_damage_out(byte main_stat) {
+  if (main_stat == STAT_STR) { return 3; }
+  else if (main_stat == STAT_DEX) { return 1; }
+  return 0;
+}
+
+int get_sp_gain_regen_tick(byte main_stat) {
+  switch(main_stat) {
+    case STAT_STR:
+      return -1;
+    break;
+    case STAT_DEX:
+      return 2;
+    break;
+    case STAT_INT:
+      return 1;
+    break;
+  }
+
+  return 2;
+}
+
+int get_attack_base_damage(byte main_stat) {
+  switch(main_stat) {
+    case STAT_STR:
+      return 6;
+    break;
+    case STAT_DEX:
+      return 8;
+    break;
+    case STAT_INT:
+      return 10;
+    break;
+  }
+
+  return 4;
+}
+
+uint64_t get_attack_damage_stat(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int) {
+  switch(main_stat) {
+    case STAT_STR:
+      return stat_str;
+    break;
+    case STAT_DEX:
+      return stat_dex;
+    break;
+    case STAT_INT:
+      return stat_int;
+    break;
+  }
+
+  return stat_str + stat_dex + stat_int;
+}
+
+uint64_t get_armor_rating(byte main_stat) {
+  switch(main_stat) {
+    case STAT_STR:
+      return 3;
+    break;
+    case STAT_DEX:
+      return 2;
+    break;
+    case STAT_INT:
+      return 1;
+    break;
+  }
+
+  return 2;
+}
+
+int get_attack_count(byte main_stat) {
+  switch(main_stat) {
+    case STAT_STR:
+      return 2;
+    break;
+    case STAT_DEX:
+      return 3;
+    break;
+    case STAT_INT:
+      return 1;
+    break;
+  }
+
+  return 3;
+}
+
 int update_ai_state(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   int entity_id,
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 ) {
   int current_state = (int)entities[entity_id][ENTITY_AI_STATE];
   int next_state = current_state;
   int profile = (int)entities[entity_id][ENTITY_AI_PROFILE];
-  byte main_stat = get_entity_main_stat(entities, entity_id);
+
   int entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
   int entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
@@ -362,6 +555,7 @@ int run_ai_state_movement(
   int entity_id,
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 ) {
@@ -369,7 +563,7 @@ int run_ai_state_movement(
 
   int current_state = (int)entities[entity_id][ENTITY_AI_STATE];
   int profile = (int)entities[entity_id][ENTITY_AI_PROFILE];
-  byte main_stat = get_entity_main_stat(entities, entity_id);
+
   int entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
   int entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
   int prev_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
@@ -436,12 +630,14 @@ int run_ai_state_movement(
     
     case AI_STATE_FLEE:
       // Move away from player
-      ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 7, seed);
+      if (squirrel(entity_id, seed + 831) % 4 != 0) {
+        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 7, seed);
 
-      if (ai_room_dir == DIR_N) { entity_y--; }
-      else if (ai_room_dir == DIR_S) { entity_y++; }
-      else if (ai_room_dir == DIR_W) { entity_x--; }
-      else if (ai_room_dir == DIR_E) { entity_x++; }
+        if (ai_room_dir == DIR_N) { entity_y--; }
+        else if (ai_room_dir == DIR_S) { entity_y++; }
+        else if (ai_room_dir == DIR_W) { entity_x--; }
+        else if (ai_room_dir == DIR_E) { entity_x++; }
+      }
 
       // Check that target tile is not occupied
       if (ai_room_dir > 0 && room_entity_navmap[entity_x][entity_y] != 0) {
@@ -465,6 +661,7 @@ int run_ai_state_action(
   int entity_id,
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
+  int room_entity_idmap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 ) {
@@ -481,7 +678,6 @@ int run_ai_state_action(
 
     case AI_STATE_IDLE:
     // Stand around or patrol, try to detect player in range
-
     break;
     
     case AI_STATE_MELEE:
@@ -493,8 +689,123 @@ int run_ai_state_action(
     break;
     
     case AI_STATE_FLEE:
+    // Move away from player
+    // TODO Use health items/spells?
     break;
   }
 
   return 1;
+}
+
+int resolve_combat(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int attacker_id,
+  int defender_id,
+  unsigned int seed
+) {
+  uint64_t damage = 0;
+  long long sp_change = 0;
+
+  unsigned int attacker_level = (unsigned int)entities[attacker_id][ENTITY_LEVEL];
+  uint64_t attacker_str = get_entity_stat(entities, attacker_id, ENTITY_STR);
+  uint64_t attacker_dex = get_entity_stat(entities, attacker_id, ENTITY_DEX);
+  uint64_t attacker_int = get_entity_stat(entities, attacker_id, ENTITY_INT);
+  uint64_t attacker_vit = get_entity_stat(entities, attacker_id, ENTITY_VIT);
+  byte attacker_main_stat = get_main_stat(attacker_str, attacker_dex, attacker_int);
+  int attcker_moves = get_attack_count(attacker_main_stat); // Get amount of moves based on attack speed
+  uint64_t attacker_base_damage = (uint64_t)get_attack_base_damage(attacker_main_stat);
+  uint64_t attacker_stat_damage = get_attack_damage_stat(attacker_main_stat, attacker_str, attacker_dex, attacker_int);
+  double attacker_crit_multiplier = 12.0 / (double)attacker_base_damage;
+  uint64_t attacker_armor_rating = (uint64_t)get_armor_rating(attacker_main_stat);
+  uint64_t attacker_sp_gain_damage_in = (uint64_t)get_sp_gain_damage_in(attacker_main_stat);
+  uint64_t attacker_sp_gain_damage_out = (uint64_t)get_sp_gain_damage_out(attacker_main_stat);
+  uint64_t attacker_max_sp = get_max_sp(attacker_main_stat, attacker_str, attacker_dex, attacker_int, attacker_vit);
+
+  unsigned int defender_level = (unsigned int)entities[defender_id][ENTITY_LEVEL];
+  uint64_t defender_str = get_entity_stat(entities, defender_id, ENTITY_STR);
+  uint64_t defender_dex = get_entity_stat(entities, defender_id, ENTITY_DEX);
+  uint64_t defender_int = get_entity_stat(entities, defender_id, ENTITY_INT);
+  uint64_t defender_vit = get_entity_stat(entities, defender_id, ENTITY_VIT);
+  byte defender_main_stat = get_main_stat(defender_str, defender_dex, defender_int);
+  int defender_moves = get_attack_count(defender_main_stat); // Get amount of moves based on attack speed
+  uint64_t defender_base_damage = (uint64_t)get_attack_base_damage(defender_main_stat);
+  uint64_t defender_stat_damage = get_attack_damage_stat(defender_main_stat, defender_str, defender_dex, defender_int);
+  double defender_crit_multiplier = 12.0 / (double)defender_base_damage;
+  uint64_t defender_armor_rating = (uint64_t)get_armor_rating(defender_main_stat);
+  uint64_t defender_sp_gain_damage_in = (uint64_t)get_sp_gain_damage_in(defender_main_stat);
+  uint64_t defender_sp_gain_damage_out = (uint64_t)get_sp_gain_damage_out(defender_main_stat);
+  uint64_t defender_max_sp = get_max_sp(defender_main_stat, defender_str, defender_dex, defender_int, defender_vit);
+
+  Serial.println("Combat start " + String(attacker_id) + "->" + String(defender_id));
+
+  int combat_turns = attcker_moves + defender_moves;
+  int current_turn = 0; // Attacker starts
+  while (combat_turns > 0) {
+    damage = 0;
+    sp_change = 0;
+
+    if (current_turn == 0) {
+      // Attacker turn
+      if (squirrel_2d(combat_turns, attacker_id, seed) % 5 == 0) {
+        // Critical damage, chance 20%
+        damage = 12 * (uint64_t)(attacker_stat_damage * attacker_crit_multiplier);
+        sp_change = sp_change - (attacker_max_sp / 5);
+      } else {
+        // Normal damage
+        damage = attacker_base_damage * (uint64_t)(attacker_stat_damage * attacker_crit_multiplier);
+        sp_change = sp_change + attacker_sp_gain_damage_out * (attacker_max_sp / 10);
+      }
+      modify_entity_sp(entities, attacker_id, sp_change);
+      
+      // Defender damage mitigation
+      damage = damage / defender_armor_rating;
+      Serial.println(String(combat_turns) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
+      if (modify_entity_hp(entities, defender_id, -damage) == 0) {
+        // Defender died from attack
+        Serial.println("Combat end, defender died " + String(attacker_id) + "->" + String(defender_id));
+        return 1;
+      } else {
+        sp_change = defender_sp_gain_damage_in * (defender_max_sp / 10);
+        modify_entity_sp(entities, defender_id, +sp_change);
+      }
+
+      // Turn end upkeep
+      if (attcker_moves > 0) { attcker_moves--; } // Attacker has turns left, reduce
+      if (defender_moves > 0) { current_turn = 1; } // Defender has turns left, swap turn
+    } else {
+      // Defender turn
+      if (squirrel_2d(combat_turns, defender_id, seed) % 5 == 0) {
+        // Critical damage, chance 20%
+        damage = 12 * (uint64_t)(defender_stat_damage * defender_crit_multiplier);
+        sp_change = sp_change - (defender_max_sp / 5);
+      } else {
+        // Normal damage
+        damage = defender_base_damage * (uint64_t)(defender_stat_damage * defender_crit_multiplier);
+        sp_change = sp_change + defender_sp_gain_damage_out * (defender_max_sp / 10);
+      }
+      modify_entity_sp(entities, defender_id, sp_change);
+      
+      // Attacker damage mitigation
+      damage = damage / attacker_armor_rating;
+      Serial.println(String(combat_turns) + " Defender hits " + String(damage) + "/" + String(entities[attacker_id][ENTITY_HP]) + ", SP " + String(sp_change));
+      if (modify_entity_hp(entities, attacker_id, -damage) == 0) {
+        // Attacker died from counter attack
+        Serial.println("Combat end, attacker died " + String(attacker_id) + "->" + String(defender_id));
+        return 2;
+      } else {
+        sp_change = attacker_sp_gain_damage_in * (attacker_max_sp / 10);
+        modify_entity_sp(entities, attacker_id, +sp_change);
+      }
+      
+      // Turn end upkeep
+      if (defender_moves > 0) { defender_moves--; } // Defender has turns left, reduce
+      if (attcker_moves > 0) { current_turn = 0; } // Attacker has turns left, swap turn
+    }
+
+    combat_turns = attcker_moves + defender_moves;
+  }
+
+  Serial.println("Combat end, survived " + String(attacker_id) + "->" + String(defender_id));
+
+  return 0;
 }
