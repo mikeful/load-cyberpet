@@ -7,7 +7,7 @@
 
 #ifndef ENTITY_SIZE
 #define ENTITY_SIZE 8
-#define ENTITY_ATTRS 15
+#define ENTITY_ATTRS 20
 
 #define ENTITY_ID_PLAYER 0
 
