@@ -29,17 +29,20 @@ uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
 int level_ups = 0;
 
-unsigned int tile = 0;
 int world_x = 0;
 int world_y = 0;
+int world_target_x = 0;
+int world_target_y = 0;
+int world_dir = 0;
+
 int area_x = 1; // 3x3 rooms in world tile
 int area_y = 1;
+int area_target_x = 0;
+int area_target_y = 0;
+int area_dir = 0;
+
 unsigned int room_x = 4; // Player position in room
 unsigned int room_y = 7;
-unsigned int entity_x = 0;
-unsigned int entity_y = 0;
-
-int ai_world_dir = 0;
 int ai_room_dir = 0;
 byte last_door = 0;
 
@@ -66,6 +69,9 @@ int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
 
 unsigned int counter = 1;
+unsigned int tile = 0;
+unsigned int entity_x = 0;
+unsigned int entity_y = 0;
 
 // Battery stuff
 int volt = 0;
@@ -202,7 +208,7 @@ void loop() {
         update_entity_navmap = false;
 
         // Setup upkeep
-        ai_world_dir = 0;
+        area_dir = 0;
         ai_room_dir = 0;
 
         new_room = false;
@@ -225,18 +231,22 @@ void loop() {
         update_entity_navmap = false;
       }
 
+      // Player movement/action
       if (counter % 2 == 0) {
-        // Decide next direction
-        if (ai_world_dir == 0) {
-          int rand_dir = 1 + (squirrel_2d(world_x, world_y, action_seed + counter) % 4);
-          if (rand_dir == 1) { ai_world_dir = DIR_N; }
-          if (rand_dir == 2) { ai_world_dir = DIR_E; }
-          if (rand_dir == 3) { ai_world_dir = DIR_S; }
-          if (rand_dir == 4) { ai_world_dir = DIR_W; }
+        // TODO World tile target navigation, try to go to tile with equal level
 
-          if (! (room_exits & ai_world_dir) || last_door & ai_world_dir) {
+        // TODO Area room target navigation, clear all rooms in area
+        // Decide next room direction if not selected
+        if (area_dir == 0) {
+          int rand_dir = 1 + (squirrel_2d(world_x, world_y, action_seed + counter) % 4);
+          if (rand_dir == 1) { area_dir = DIR_N; }
+          if (rand_dir == 2) { area_dir = DIR_E; }
+          if (rand_dir == 3) { area_dir = DIR_S; }
+          if (rand_dir == 4) { area_dir = DIR_W; }
+
+          if (! (room_exits & area_dir) || last_door & area_dir) {
             // Selected door does not exist in room or leads to last visited room
-            ai_world_dir = 0;
+            area_dir = 0;
           }
         }
 
@@ -251,10 +261,10 @@ void loop() {
           ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, action_seed + counter);
         } else {
           // No entities in room, move to next room
-          if (ai_world_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
-          if (ai_world_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
-          if (ai_world_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
-          if (ai_world_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
+          if (area_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
+          if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
+          if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
+          if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
         }
 
         if (ai_room_dir == DIR_N) { room_y--; update_player_navmap = true; }
@@ -273,6 +283,8 @@ void loop() {
         build_dijkstra_map(room_player_navmap, room_wallmap);
         update_player_navmap = false;
       }
+
+      // Entity movement/action
 
       // Collision/combat
       for (int entity_id = 1; entity_id < 8; entity_id++) {
