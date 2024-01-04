@@ -256,3 +256,245 @@ uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uin
 
   return stat_vit;
 }
+
+int update_ai_state(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  int room_entity_navmap[MAP_W][MAP_H],
+  int room_player_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+) {
+  int current_state = (int)entities[entity_id][ENTITY_AI_STATE];
+  int next_state = current_state;
+  int profile = (int)entities[entity_id][ENTITY_AI_PROFILE];
+  byte main_stat = get_entity_main_stat(entities, entity_id);
+  int entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+  int entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
+
+  switch(current_state) {
+    case AI_STATE_START:
+    // Setup AI variabled based on current profile and entity type
+    switch(profile) {
+      case AI_PROFILE_MELEE:
+        // Preferred range is next to player
+        entities[entity_id][ENTITY_AI_DATA1] = 1;
+      break;
+      case AI_PROFILE_RANGED:
+        // Preferred range is 2-3 tiles to player
+        entities[entity_id][ENTITY_AI_DATA1] = 2 + (squirrel(entity_id, seed + 409) % 2);
+      break;
+    }
+
+    next_state = AI_STATE_IDLE;
+    break;
+
+    case AI_STATE_IDLE:
+      // Stand around or patrol, try to detect player in range
+      if (room_player_navmap[entity_x][entity_y] <= 4) {
+        if (profile == AI_PROFILE_MELEE) { next_state = AI_STATE_MELEE; }
+        else if (profile == AI_PROFILE_RANGED) { next_state = AI_STATE_RANGED; }
+      }
+
+      // TODO Check if friendly combat entity in range
+    
+    break;
+    
+    case AI_STATE_MELEE:
+      // Try to move next to player for attacks, flee on low health/skill points
+      if (entities[entity_id][ENTITY_HP] < (get_entity_max_hp(entities, entity_id) / 5)) {
+        if (squirrel(entity_id, seed + 419) % 2) {
+          next_state = AI_STATE_FLEE;
+        }
+      } else if (entities[entity_id][ENTITY_SP] < (get_entity_max_sp(entities, entity_id) / 10)) {
+        if (squirrel(entity_id, seed + 419) % 2) {
+          next_state = AI_STATE_FLEE;
+        }
+      }
+
+    break;
+    
+    case AI_STATE_RANGED:
+      // Try to move next to player for attacks, flee on low health/skill points
+      if (entities[entity_id][ENTITY_HP] < (get_entity_max_sp(entities, entity_id) / 3)) {
+        if (squirrel(entity_id, seed + 429) % 2) {
+          next_state = AI_STATE_FLEE;
+        }
+      } else if (entities[entity_id][ENTITY_SP] < (get_entity_max_sp(entities, entity_id) / 8)) {
+        if (squirrel(entity_id, seed + 429) % 2) {
+          next_state = AI_STATE_FLEE;
+        }
+      }
+
+    break;
+    
+    case AI_STATE_FLEE:
+      // Move away from player, go back to combat after recovery
+      if (
+        profile == AI_PROFILE_MELEE
+        && squirrel(entity_id, seed + 439) % 2
+        && entities[entity_id][ENTITY_HP] > (get_entity_max_sp(entities, entity_id) / 3)
+        && entities[entity_id][ENTITY_SP] > (get_entity_max_sp(entities, entity_id) / 4)
+      ) {
+        next_state = AI_STATE_MELEE;
+      } else if (
+        profile == AI_PROFILE_RANGED
+        && squirrel(entity_id, seed + 439) % 2
+        && entities[entity_id][ENTITY_HP] > (get_entity_max_sp(entities, entity_id) / 2)
+        && entities[entity_id][ENTITY_SP] > (get_entity_max_sp(entities, entity_id) / 3)
+      ) {
+        next_state = AI_STATE_RANGED;
+      }
+
+    break;
+  }
+
+  if (next_state != current_state) {
+    entities[entity_id][ENTITY_AI_STATE] = next_state;
+    return 1;
+  }
+
+  return 0;
+}
+
+int run_ai_state_movement(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  int room_entity_navmap[MAP_W][MAP_H],
+  int room_player_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+) {
+  if (entities[entity_id][ENTITY_ALIVE] == 0) { return 1; }
+
+  int current_state = (int)entities[entity_id][ENTITY_AI_STATE];
+  int profile = (int)entities[entity_id][ENTITY_AI_PROFILE];
+  byte main_stat = get_entity_main_stat(entities, entity_id);
+  int entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+  int entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
+  int prev_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+  int prev_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
+
+  int tile_value = 0;
+  int target_distance = 1;
+  int ai_room_dir = 0;
+
+  switch(current_state) {
+    case AI_STATE_START:
+    // Skip AI in setup state
+    break;
+
+    case AI_STATE_IDLE:
+      // Stand around or patrol, try to detect player in range
+      if (squirrel(entity_id, seed + 831) % 5 == 0) {
+        ai_room_dir = 1 + (squirrel(entity_id, seed + 386) % 4);
+        if (ai_room_dir == 1) { entity_y--; }
+        else if (ai_room_dir == 2) { entity_y++; }
+        else if (ai_room_dir == 3) { entity_x--; }
+        else if (ai_room_dir == 4) { entity_x++; }
+
+        // Check that target tile is not occupied
+        tile_value = get_dijkstra_value(room_entity_navmap, entity_x, entity_y);
+        if (tile_value != DIJKSTRA_MAX && tile_value != 0) {
+          // Partially update entity nav map to allow other entities check for occupancy
+          room_entity_navmap[prev_entity_x][prev_entity_y] = 1;
+          room_entity_navmap[entity_x][entity_y] = 0;
+          
+          // Set updated entity coordinates
+          entities[entity_id][ENTITY_ROOM_X] = entity_x;
+          entities[entity_id][ENTITY_ROOM_Y] = entity_y;
+        }
+      }
+
+    break;
+    
+    case AI_STATE_MELEE:
+    case AI_STATE_RANGED:
+      // Try to move next to player for attacks
+      if (squirrel(entity_id, seed + 831) % 4 != 0) {
+        target_distance = (int)entities[entity_id][ENTITY_AI_DATA1];
+        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, target_distance, seed);
+
+        if (ai_room_dir == DIR_N) { entity_y--; }
+        else if (ai_room_dir == DIR_S) { entity_y++; }
+        else if (ai_room_dir == DIR_W) { entity_x--; }
+        else if (ai_room_dir == DIR_E) { entity_x++; }
+      }
+
+      // Check that target tile is not occupied
+      if (ai_room_dir > 0 && room_entity_navmap[entity_x][entity_y] != 0) {
+        // Partially update entity nav map to allow other entities check for occupancy
+        room_entity_navmap[prev_entity_x][prev_entity_y] = 1;
+        room_entity_navmap[entity_x][entity_y] = 0;
+        
+        // Set updated entity coordinates
+        entities[entity_id][ENTITY_ROOM_X] = entity_x;
+        entities[entity_id][ENTITY_ROOM_Y] = entity_y;
+      }
+
+    break;
+    
+    case AI_STATE_FLEE:
+      // Move away from player
+      ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 7, seed);
+
+      if (ai_room_dir == DIR_N) { entity_y--; }
+      else if (ai_room_dir == DIR_S) { entity_y++; }
+      else if (ai_room_dir == DIR_W) { entity_x--; }
+      else if (ai_room_dir == DIR_E) { entity_x++; }
+
+      // Check that target tile is not occupied
+      if (ai_room_dir > 0 && room_entity_navmap[entity_x][entity_y] != 0) {
+        // Partially update entity nav map to allow other entities check for occupancy
+        room_entity_navmap[prev_entity_x][prev_entity_y] = 1;
+        room_entity_navmap[entity_x][entity_y] = 0;
+        
+        // Set updated entity coordinates
+        entities[entity_id][ENTITY_ROOM_X] = entity_x;
+        entities[entity_id][ENTITY_ROOM_Y] = entity_y;
+      }
+
+    break;
+  }
+
+  return 1;
+}
+
+int run_ai_state_action(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  int room_entity_navmap[MAP_W][MAP_H],
+  int room_player_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+) {
+  if (entities[entity_id][ENTITY_ALIVE] == 0) { return 1; }
+
+  int current_state = (int)entities[entity_id][ENTITY_AI_STATE];
+  int profile = (int)entities[entity_id][ENTITY_AI_PROFILE];
+  byte main_stat = get_entity_main_stat(entities, entity_id);
+
+  switch(current_state) {
+    case AI_STATE_START:
+    // Skip AI in setup state
+    break;
+
+    case AI_STATE_IDLE:
+    // Stand around or patrol, try to detect player in range
+
+    break;
+    
+    case AI_STATE_MELEE:
+    // Try to move next to player for attacks
+    break;
+    
+    case AI_STATE_RANGED:
+    // Try to move next to player for attacks
+    break;
+    
+    case AI_STATE_FLEE:
+    break;
+  }
+
+  return 1;
+}

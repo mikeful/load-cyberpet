@@ -89,4 +89,29 @@ uint64_t get_entity_max_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int ent
 uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
 uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
 
+int update_ai_state(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  int room_entity_navmap[MAP_W][MAP_H],
+  int room_player_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+);
+int run_ai_state_movement(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  int room_entity_navmap[MAP_W][MAP_H],
+  int room_player_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+);
+int run_ai_state_action(
+  uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
+  int entity_id,
+  int room_entity_navmap[MAP_W][MAP_H],
+  int room_player_navmap[MAP_W][MAP_H],
+  int world_tile_data[15],
+  unsigned int seed
+);
+
 #endif
