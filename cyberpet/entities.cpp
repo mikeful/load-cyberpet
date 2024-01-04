@@ -48,7 +48,7 @@ int setup_room_entities(
   int entity_x = 0;
   int entity_y = 0;
 
-  for (int entity_id = 1; entity_id < 8; entity_id++) {
+  for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
     // TODO Check area entity alive bitmask
     
     // Select position for entity

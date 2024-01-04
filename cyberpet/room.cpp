@@ -699,8 +699,6 @@ int get_dijkstra_direction(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_
     // Equally valid direction found, choose randomly
     current_lowest = tile_value;
     current_dir = DIR_S;
-
-    d4 = 1 + (squirrel_2d(tile_x, tile_y, seed + 547 + tile_value) % 4);
   }
   if (map_value == target_distance) { return current_dir; }
 

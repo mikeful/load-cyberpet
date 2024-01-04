@@ -118,6 +118,14 @@ void setup() {
       room_tilemap[i][j] = 0;
     }
   }
+
+  clear_dijkstra_map(room_exit_navmap);
+  clear_dijkstra_map(room_exitn_navmap);
+  clear_dijkstra_map(room_exite_navmap);
+  clear_dijkstra_map(room_exits_navmap);
+  clear_dijkstra_map(room_exitw_navmap);
+  clear_dijkstra_map(room_player_navmap);
+  clear_dijkstra_map(room_entity_navmap);
 }
 
 void loop() {
