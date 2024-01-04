@@ -21,8 +21,8 @@
 #define STATE_WORLDMAP 3
 #define STATE_GAMEMENU 4
 
-int content_seed = 0; // Determines world content, keep same
-int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
+unsigned int content_seed = 0; // Determines world content, keep same
+unsigned int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
 byte game_state = STATE_START;
 unsigned int player_level = 1;
 uint64_t player_exp = 0;
@@ -62,16 +62,16 @@ int room_exitw_navmap[MAP_W][MAP_H];
 uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS];
 int room_player_navmap[MAP_W][MAP_H];
 int room_entity_navmap[MAP_W][MAP_H];
-bool update_player_navmap = false;
-bool update_entity_navmap = false;
+bool update_player_navmap = true;
+bool update_entity_navmap = false; // Room generation updates at start
 
 int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
 
 unsigned int counter = 1;
 unsigned int tile = 0;
-unsigned int entity_x = 0;
-unsigned int entity_y = 0;
+unsigned int check_entity_x = 0;
+unsigned int check_entity_y = 0;
 
 // Battery stuff
 int volt = 0;
@@ -150,7 +150,7 @@ void loop() {
     progress = map(voltage, 2200, 4200, 0, 100);
 
     // Mess action random seed with battery value
-    action_seed += analogValue;
+    action_seed += (unsigned int)analogValue;
   }
 
   /*
@@ -182,9 +182,9 @@ void loop() {
         area_exits = get_area_exits(world_x, world_y);
         room_exits = get_room_exits(area_x, area_y);
         if (area_x == 1 && area_y == 0) { room_exits = room_exits | area_exits; }
-        if (area_x == 2 && area_y == 1) { room_exits = room_exits | area_exits; }
-        if (area_x == 1 && area_y == 2) { room_exits = room_exits | area_exits; }
-        if (area_x == 0 && area_y == 1) { room_exits = room_exits | area_exits; }
+        else if (area_x == 2 && area_y == 1) { room_exits = room_exits | area_exits; }
+        else if (area_x == 1 && area_y == 2) { room_exits = room_exits | area_exits; }
+        else if (area_x == 0 && area_y == 1) { room_exits = room_exits | area_exits; }
 
         // Setup player visible room
         setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, content_seed);
@@ -197,9 +197,9 @@ void loop() {
 
         clear_dijkstra_map(room_exit_navmap);
         if (room_exits & EXIT_N) { merge_dijkstra_maps(room_exit_navmap, room_exitn_navmap); }
-        if (room_exits & EXIT_S) { merge_dijkstra_maps(room_exit_navmap, room_exits_navmap); }
-        if (room_exits & EXIT_W) { merge_dijkstra_maps(room_exit_navmap, room_exitw_navmap); }
-        if (room_exits & EXIT_E) { merge_dijkstra_maps(room_exit_navmap, room_exite_navmap); }
+        else if (room_exits & EXIT_S) { merge_dijkstra_maps(room_exit_navmap, room_exits_navmap); }
+        else if (room_exits & EXIT_W) { merge_dijkstra_maps(room_exit_navmap, room_exitw_navmap); }
+        else if (room_exits & EXIT_E) { merge_dijkstra_maps(room_exit_navmap, room_exite_navmap); }
 
         // Setup entities and update navigation map leading to them
         clear_dijkstra_map(room_entity_navmap);
@@ -218,12 +218,12 @@ void loop() {
       if (update_entity_navmap) {
         clear_dijkstra_map(room_entity_navmap);
 
-        for (int entity_id = 1; entity_id < 8; entity_id++) {
+        for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
           if (entities[entity_id][ENTITY_ALIVE] == 1) {
-            entity_x = entities[entity_id][ENTITY_ROOM_X];
-            entity_y = entities[entity_id][ENTITY_ROOM_Y];
+            check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+            check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
-            room_entity_navmap[entity_x][entity_y] = 0;
+            room_entity_navmap[check_entity_x][check_entity_y] = 0;
           }
         }
 
@@ -240,9 +240,9 @@ void loop() {
         if (area_dir == 0) {
           int rand_dir = 1 + (squirrel_2d(world_x, world_y, action_seed + counter) % 4);
           if (rand_dir == 1) { area_dir = DIR_N; }
-          if (rand_dir == 2) { area_dir = DIR_E; }
-          if (rand_dir == 3) { area_dir = DIR_S; }
-          if (rand_dir == 4) { area_dir = DIR_W; }
+          else if (rand_dir == 2) { area_dir = DIR_E; }
+          else if (rand_dir == 3) { area_dir = DIR_S; }
+          else if (rand_dir == 4) { area_dir = DIR_W; }
 
           if (! (room_exits & area_dir) || last_door & area_dir) {
             // Selected door does not exist in room or leads to last visited room
@@ -262,15 +262,15 @@ void loop() {
         } else {
           // No entities in room, move to next room
           if (area_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
-          if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
-          if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
-          if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
+          else if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
+          else if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
+          else if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
         }
 
         if (ai_room_dir == DIR_N) { room_y--; update_player_navmap = true; }
-        if (ai_room_dir == DIR_S) { room_y++; update_player_navmap = true; }
-        if (ai_room_dir == DIR_W) { room_x--; update_player_navmap = true; }
-        if (ai_room_dir == DIR_E) { room_x++; update_player_navmap = true; }
+        else if (ai_room_dir == DIR_S) { room_y++; update_player_navmap = true; }
+        else if (ai_room_dir == DIR_W) { room_x--; update_player_navmap = true; }
+        else if (ai_room_dir == DIR_E) { room_x++; update_player_navmap = true; }
 
         entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
         entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y] = room_y;
@@ -286,17 +286,17 @@ void loop() {
 
       // Entity movement/action
 
-      // Collision/combat
-      for (int entity_id = 1; entity_id < 8; entity_id++) {
+      // Temp collision/combat
+      for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
         if (entities[entity_id][ENTITY_ALIVE] == 1) {
-          entity_x = entities[entity_id][ENTITY_ROOM_X];
-          entity_y = entities[entity_id][ENTITY_ROOM_Y];
+          check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+          check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
-          if (entity_x == room_x && entity_y == room_y) {
+          if (check_entity_x == room_x && check_entity_y == room_y) {
             entities[entity_id][ENTITY_ALIVE] = 0;
             update_entity_navmap = true;
 
-            level_ups = gain_exp(entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
+            level_ups = gain_exp((int)entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
             if (level_ups > 0) {
               entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
               update_entity_stats(entities, ENTITY_ID_PLAYER);
@@ -312,10 +312,10 @@ void loop() {
           room_entity_tilemap[i][j] = -1;
         }
       }
-      for (int entity_id = 0; entity_id < 8; entity_id++) {
+      for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
         if (entities[entity_id][ENTITY_ALIVE] == 1) {
-          entity_x = entities[entity_id][ENTITY_ROOM_X];
-          entity_y = entities[entity_id][ENTITY_ROOM_Y];
+          check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+          check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
           room_entity_tilemap[entity_x][entity_y] = (int)entities[entity_id][ENTITY_ICON];
         }

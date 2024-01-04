@@ -151,9 +151,9 @@ byte get_main_stat(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int) {
   return get_main_stat(stats);
 }
 
-byte get_main_stat(uint64_t stats[4]) {
-  uint64_t highest_stat_value = -1;
-  byte highest_stat = -1;
+byte get_main_stat(uint64_t stats[3]) {
+  uint64_t highest_stat_value = 0;
+  byte highest_stat = 255;
 
   for (byte stat = 0; stat < 3; stat++) {
     if (stats[stat] > highest_stat_value) {
@@ -163,6 +163,15 @@ byte get_main_stat(uint64_t stats[4]) {
   }
 
   return highest_stat;
+}
+
+byte get_entity_main_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {
+  uint64_t stat_str = get_entity_stat(entities, entity_id, ENTITY_STR);
+  uint64_t stat_dex = get_entity_stat(entities, entity_id, ENTITY_DEX);
+  uint64_t stat_int = get_entity_stat(entities, entity_id, ENTITY_INT);
+  uint64_t stat_vit = get_entity_stat(entities, entity_id, ENTITY_VIT);
+
+  return get_main_stat(stat_str, stat_dex, stat_int);
 }
 
 uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {

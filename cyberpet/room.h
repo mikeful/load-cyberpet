@@ -155,6 +155,7 @@ int get_room_tile_index(int tile_x, int tile_y, byte tile_type, unsigned int see
 bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y);
 
 int clear_dijkstra_map(int dijkstra_map[MAP_W][MAP_H]);
+int get_dijkstra_value(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y);
 int get_dijkstra_lowest(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y);
 int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y);
 int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]);

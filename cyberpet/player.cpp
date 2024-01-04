@@ -10,10 +10,10 @@ int gain_exp(int target_level, unsigned int *level, uint64_t *experience, unsign
 
   while (*experience >= level_up_req) {
     *level = *level + 1;
-    *experience -= level_up_req;
+    *experience = *experience - level_up_req;
 
     level_ups++;
-    level_up_req = get_level_exp_req(*level);
+    level_up_req = get_level_exp_req(*level + 1);
 
     multiplier_bonus = get_level_up_bonus(*level, *multiplier, seed);
     if (multiplier_bonus > 0) {

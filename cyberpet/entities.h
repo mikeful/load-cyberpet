@@ -77,12 +77,15 @@ int setup_entity(
   int world_tile_data[15],
   unsigned int seed
 );
+
 int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
 uint64_t get_entity_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, byte stat);
 byte get_main_stat(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
 byte get_main_stat(uint64_t stats[4]);
+byte get_entity_main_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
 uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
 uint64_t get_entity_max_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id);
+
 uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
 uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit);
 
