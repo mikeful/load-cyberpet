@@ -317,7 +317,7 @@ void loop() {
           check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
           check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
-          room_entity_tilemap[entity_x][entity_y] = (int)entities[entity_id][ENTITY_ICON];
+          room_entity_tilemap[check_entity_x][check_entity_y] = (int)entities[entity_id][ENTITY_ICON];
         }
       }
 

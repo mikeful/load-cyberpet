@@ -109,9 +109,38 @@ int setup_entity(
 
   entities[entity_id][ENTITY_ROOM_X] = entity_x;
   entities[entity_id][ENTITY_ROOM_Y] = entity_y;
-  entities[entity_id][ENTITY_ICON] = 174; //343;
+  entities[entity_id][ENTITY_ICON] = 347; //174
 
-  entities[entity_id][ENTITY_AI_PROFILE] = AI_PROFILE_NONE;
+  // TODO Entity faction
+  // TODO Entity combat type
+  // TODO Entity sprite based on faction, type and biome
+  byte main_stat = get_entity_main_stat(entities, entity_id);
+  int ai_profile = AI_PROFILE_NONE;
+  switch(main_stat) {
+    case STAT_STR:
+      if (squirrel(entity_id, seed + 409) % 3 == 0) {
+        ai_profile = AI_PROFILE_RANGED;
+      } else {
+        ai_profile = AI_PROFILE_MELEE;
+      }
+    break;
+    case STAT_DEX:
+      if (squirrel(entity_id, seed + 409) % 3 == 0) {
+        ai_profile = AI_PROFILE_MELEE;
+      } else {
+        ai_profile = AI_PROFILE_RANGED;
+      }
+    break;
+    case STAT_INT:
+      if (squirrel(entity_id, seed + 409) % 4 == 0) {
+        ai_profile = AI_PROFILE_MELEE;
+      } else {
+        ai_profile = AI_PROFILE_RANGED;
+      }
+    break;
+  }
+
+  entities[entity_id][ENTITY_AI_PROFILE] = ai_profile;
   entities[entity_id][ENTITY_AI_STATE] = AI_STATE_START;
   entities[entity_id][ENTITY_AI_DATA1] = 0;
   entities[entity_id][ENTITY_AI_DATA2] = 0;
