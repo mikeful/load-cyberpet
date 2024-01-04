@@ -123,15 +123,20 @@ void setup() {
 void loop() {
   counter++;
 
-  // Battery stuff
-  digitalWrite(ADC_Ctrl, LOW);
-  delay(10);
-  int analogValue = analogRead(VBAT_Read);
-  digitalWrite(ADC_Ctrl, HIGH);
+  if (counter % 3 == 0) {
+    // Battery stuff
+    digitalWrite(ADC_Ctrl, LOW);
+    delay(10);
+    int analogValue = analogRead(VBAT_Read);
+    digitalWrite(ADC_Ctrl, HIGH);
 
-  float floatVoltage = batFactor * (float)analogValue;
-  uint16_t voltage = (int)(floatVoltage * 1000.0);
-  progress = map(voltage, 2200, 4200, 0, 100);
+    float floatVoltage = batFactor * (float)analogValue;
+    uint16_t voltage = (int)(floatVoltage * 1000.0);
+    progress = map(voltage, 2200, 4200, 0, 100);
+
+    // Mess action random seed with battery value
+    action_seed += analogValue;
+  }
 
   /*
   display1->drawProgressBar(1, 64, 62, 10, progress);
@@ -140,9 +145,6 @@ void loop() {
   display1->setTextAlignment(TEXT_ALIGN_CENTER);
   display1->drawString(32, 5, String(floatVoltage) + "V");
   */
-
-  // Mess action random seed with battery value
-  action_seed += analogValue;
 
   // Clear the display
   display1.clearDisplay();
