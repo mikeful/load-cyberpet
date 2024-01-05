@@ -11,37 +11,40 @@
 #include "Arduino.h"
 #include "squirrel_hash.h"
 
-#define EQUIP_MELEE 5
-#define EQUIP_RANGED 6
-#define EQUIP_MAGIC 7
-#define EQUIP_ICON 8
+#define EQUIP_TYPE 4
+#define EQUIP_ICON 5
 
-const int equipments[][8] = {
-    /* None */     {1,1,1,1, 0,0,0, -1},
-    /* Ring */     {1,2,3,4, 0,0,1, 61,},
-    /* WizHat */   {2,1,3,4, 0,0,1, 23,},
-    /* Armor */    {3,1,2,4, 0,0,0, 39,},
-    /* Scope */    {1,3,2,4, 0,0,0, 2003,},
-    /* Ammo */     {2,3,1,4, 0,0,0, 133,},
-    /* Shield */   {3,2,1,4, 0,0,0, 3,},
-    /* ZapStaff */ {3,2,4,1, 1,1,1, 145,},
-    /* FireWand */ {2,3,4,1, 0,1,1, 138,},
-    /* Spear */    {4,3,2,1, 1,1,0, 123,},
-    /* Daggers */  {3,4,2,1, 1,1,0, 102,},
-    /* FireBow */  {2,4,3,1, 1,1,1, 129,},
-    /* IceSword */ {4,2,3,1, 1,0,1, 111,},
-    /* ZapSword */ {4,1,3,2, 1,0,1, 109,},
-    /* VoidGun */  {1,4,3,2, 0,1,1, 2027,},
-    /* 2Swords */  {3,4,1,2, 1,0,0, 1538,},
-    /* Bow */      {4,3,1,2, 0,1,0, 128,},
-    /* VoidWand */ {1,3,4,2, 0,1,1, 140,},
-    /* WizStaff */ {3,1,4,2, 1,1,1, 141,},
-    /* FireBook */ {2,1,4,3, 0,1,1, 177,},
-    /* ZapBook */  {1,2,4,3, 0,1,1, 178,},
-    /* Sword */    {4,2,1,3, 1,0,0, 103,},
-    /* Crossbow */ {2,4,1,3, 0,1,0, 130,},
-    /* Gun */      {1,4,2,3, 0,1,0, 2004,},
-    /* Axe */      {4,1,2,3, 1,0,0, 117,},
+#define EQUIP_TYPE_UNARMED 0
+#define EQUIP_TYPE_WEAPON 1
+#define EQUIP_TYPE_RANGED 2
+#define EQUIP_TYPE_MAGIC 3
+
+const int equipments[][6] = {
+    /* None */     {1,1,1,1, EQUIP_TYPE_UNARMED, -1},
+    /* Ring */     {1,2,3,4, EQUIP_TYPE_UNARMED, 61,},
+    /* WizHat */   {2,1,3,4, EQUIP_TYPE_UNARMED, 23,},
+    /* Armor */    {3,1,2,4, EQUIP_TYPE_UNARMED, 39,},
+    /* Scope */    {1,3,2,4, EQUIP_TYPE_UNARMED, 2003,},
+    /* Ammo */     {2,3,1,4, EQUIP_TYPE_UNARMED, 133,},
+    /* Shield */   {3,2,1,4, EQUIP_TYPE_UNARMED, 3,},
+    /* ZapStaff */ {3,2,4,1, EQUIP_TYPE_MAGIC,   145,},
+    /* FireWand */ {2,3,4,1, EQUIP_TYPE_MAGIC,   138,},
+    /* Spear */    {4,3,2,1, EQUIP_TYPE_RANGED,  123,},
+    /* Daggers */  {3,4,2,1, EQUIP_TYPE_WEAPON,  102,},
+    /* FireBow */  {2,4,3,1, EQUIP_TYPE_RANGED,  129,},
+    /* IceSword */ {4,2,3,1, EQUIP_TYPE_WEAPON,  111,},
+    /* ZapSword */ {4,1,3,2, EQUIP_TYPE_WEAPON,  109,},
+    /* VoidGun */  {1,4,3,2, EQUIP_TYPE_RANGED,  2027,},
+    /* 2Swords */  {3,4,1,2, EQUIP_TYPE_WEAPON,  1538,},
+    /* Bow */      {4,3,1,2, EQUIP_TYPE_WEAPON,  128,},
+    /* VoidWand */ {1,3,4,2, EQUIP_TYPE_MAGIC,   140,},
+    /* WizStaff */ {3,1,4,2, EQUIP_TYPE_MAGIC,   141,},
+    /* FireBook */ {2,1,4,3, EQUIP_TYPE_MAGIC,   177,},
+    /* ZapBook */  {1,2,4,3, EQUIP_TYPE_MAGIC,   178,},
+    /* Sword */    {4,2,1,3, EQUIP_TYPE_WEAPON,  103,},
+    /* Crossbow */ {2,4,1,3, EQUIP_TYPE_RANGED,  130,},
+    /* Gun */      {1,4,2,3, EQUIP_TYPE_RANGED,  2004,},
+    /* Axe */      {4,1,2,3, EQUIP_TYPE_WEAPON,  117,},
 };
 
 const String equipment_names[] = {
@@ -78,5 +81,11 @@ int get_equip_stat(int equip_id, byte stat);
 int get_equip_stat(int equip_id, byte stat, int tier);
 int get_equip_stat(int equip_id, byte stat, int tier, int flaws, unsigned int seed);
 int get_equip_upgrade_cost(int base_cost, int tier);
+
+int get_attack_base_damage(byte weapon_type);
+uint64_t get_attack_damage_stat(byte weapon_type, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
+uint64_t get_armor_rating(byte weapon_type);
+int get_attack_count(byte weapon_type);
+int get_attack_cost(byte weapon_type);
 
 #endif

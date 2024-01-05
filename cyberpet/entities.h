@@ -7,7 +7,7 @@
 
 #ifndef ENTITY_SIZE
 #define ENTITY_SIZE 8
-#define ENTITY_ATTRS 20
+#define ENTITY_ATTRS 26
 
 #define ENTITY_ID_PLAYER 0
 
@@ -31,6 +31,12 @@
 #define ENTITY_AI_DATA2 17
 #define ENTITY_AI_DATA3 18
 #define ENTITY_AI_DATA4 19
+#define ENTITY_ITEM1 20
+#define ENTITY_ITEM1_TIER 21
+#define ENTITY_ITEM1_COOLDOWN 22
+#define ENTITY_ITEM2 23
+#define ENTITY_ITEM2_TIER 24
+#define ENTITY_ITEM2_COOLDOWN 25
 #endif
 
 #ifndef AI_PROFILE_NONE
@@ -102,12 +108,6 @@ uint64_t get_max_sp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64
 int get_sp_gain_damage_in(byte main_stat);
 int get_sp_gain_damage_out(byte main_stat);
 int get_sp_gain_regen_tick(byte main_stat);
-
-int get_attack_base_damage(byte main_stat);
-uint64_t get_attack_damage_stat(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
-uint64_t get_armor_rating(byte main_stat);
-int get_attack_count(byte main_stat);
-int get_attack_cost(byte main_stat);
 
 int update_ai_state(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],

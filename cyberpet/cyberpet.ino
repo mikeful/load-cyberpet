@@ -226,7 +226,20 @@ void loop() {
             room_entity_idmap[i][j] = 0;
           }
         }
-        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, room_entity_idmap, world_x, world_y, world_tile_data, area_x, area_y, world_tile_dead_value, content_seed);
+        setup_room_entities(
+          entities,
+          room_wallmap,
+          room_exit_navmap,
+          room_entity_navmap,
+          room_entity_idmap,
+          world_x,
+          world_y,
+          world_tile_data,
+          area_x,
+          area_y,
+          world_tile_dead_value,
+          content_seed
+        );
         build_dijkstra_map(room_entity_navmap, room_wallmap, false);
         update_entity_navmap = false;
 

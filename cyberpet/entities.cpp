@@ -2,13 +2,28 @@
 
 int setup_player_entity(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level) {
   int entity_id = ENTITY_ID_PLAYER;
-  int equipment_id = 21; // 7/21 hp testing
+  int equipment_id = 7; // 7/21 hp testing
   int equipment_tier = 0;
 
+  entities[entity_id][ENTITY_ITEM1] = (uint64_t)equipment_id;
+  entities[entity_id][ENTITY_ITEM1_TIER] = (uint64_t)equipment_tier;
+  entities[entity_id][ENTITY_ITEM1_COOLDOWN] = 0;
   entities[entity_id][ENTITY_STR] = (uint64_t)get_equip_stat(equipment_id, STAT_STR, equipment_tier);
   entities[entity_id][ENTITY_DEX] = (uint64_t)get_equip_stat(equipment_id, STAT_DEX, equipment_tier);
   entities[entity_id][ENTITY_INT] = (uint64_t)get_equip_stat(equipment_id, STAT_INT, equipment_tier);
   entities[entity_id][ENTITY_VIT] = (uint64_t)get_equip_stat(equipment_id, STAT_VIT, equipment_tier);
+
+  equipment_id = 2;
+  equipment_tier = 0;
+
+  entities[entity_id][ENTITY_ITEM2] = (uint64_t)equipment_id;
+  entities[entity_id][ENTITY_ITEM2_TIER] = (uint64_t)equipment_tier;
+  entities[entity_id][ENTITY_ITEM2_COOLDOWN] = 0;
+  entities[entity_id][ENTITY_STR] += (uint64_t)get_equip_stat(equipment_id, STAT_STR, equipment_tier);
+  entities[entity_id][ENTITY_DEX] += (uint64_t)get_equip_stat(equipment_id, STAT_DEX, equipment_tier);
+  entities[entity_id][ENTITY_INT] += (uint64_t)get_equip_stat(equipment_id, STAT_INT, equipment_tier);
+  entities[entity_id][ENTITY_VIT] += (uint64_t)get_equip_stat(equipment_id, STAT_VIT, equipment_tier);
+
   entities[entity_id][ENTITY_LEVEL] = player_level;
 
   entities[entity_id][ENTITY_ALIVE] = 1;
@@ -104,15 +119,25 @@ int setup_entity(
   if (entity_id == ENTITY_ID_PLAYER) { return 0; }
 
   int equipment_id = 1 + (squirrel(entity_id, seed) % 23); // TODO define max item count
+  int equipment_tier = 0;
 
   bool is_elite = false; // +3 levels, gold+loot
   bool is_boss = false; // +5 levels, gold+loot
 
-  entities[entity_id][ENTITY_LEVEL] = (uint64_t)world_tile_data[TILE_LEVEL];
+  entities[entity_id][ENTITY_ITEM1] = (uint64_t)equipment_id;
+  entities[entity_id][ENTITY_ITEM1_TIER] = (uint64_t)equipment_tier;
+  entities[entity_id][ENTITY_ITEM1_COOLDOWN] = 0;
+
   entities[entity_id][ENTITY_STR] = (uint64_t)get_equip_stat(equipment_id, STAT_STR);
   entities[entity_id][ENTITY_DEX] = (uint64_t)get_equip_stat(equipment_id, STAT_DEX);
   entities[entity_id][ENTITY_INT] = (uint64_t)get_equip_stat(equipment_id, STAT_INT);
   entities[entity_id][ENTITY_VIT] = (uint64_t)get_equip_stat(equipment_id, STAT_VIT);
+
+  entities[entity_id][ENTITY_ITEM2] = 0;
+  entities[entity_id][ENTITY_ITEM2_TIER] = 0;
+  entities[entity_id][ENTITY_ITEM2_COOLDOWN] = 0;
+
+  entities[entity_id][ENTITY_LEVEL] = (uint64_t)world_tile_data[TILE_LEVEL];
 
   entities[entity_id][ENTITY_ALIVE] = (uint64_t)is_alive;
   entities[entity_id][ENTITY_BLESSED_TICKS] = 0;
@@ -397,38 +422,6 @@ int get_sp_gain_regen_tick(byte main_stat) {
   return 2;
 }
 
-int get_attack_base_damage(byte main_stat) {
-  switch(main_stat) {
-    case STAT_STR:
-      return 6;
-    break;
-    case STAT_DEX:
-      return 8;
-    break;
-    case STAT_INT:
-      return 10;
-    break;
-  }
-
-  return 4;
-}
-
-uint64_t get_attack_damage_stat(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int) {
-  switch(main_stat) {
-    case STAT_STR:
-      return stat_str;
-    break;
-    case STAT_DEX:
-      return stat_dex;
-    break;
-    case STAT_INT:
-      return stat_int;
-    break;
-  }
-
-  return stat_str + stat_dex + stat_int;
-}
-
 uint64_t get_armor_rating(byte main_stat) {
   switch(main_stat) {
     case STAT_STR:
@@ -443,38 +436,6 @@ uint64_t get_armor_rating(byte main_stat) {
   }
 
   return 2;
-}
-
-int get_attack_count(byte main_stat) {
-  switch(main_stat) {
-    case STAT_STR:
-      return 2;
-    break;
-    case STAT_DEX:
-      return 3;
-    break;
-    case STAT_INT:
-      return 1;
-    break;
-  }
-
-  return 3;
-}
-
-int get_attack_cost(byte main_stat) {
-  switch(main_stat) {
-    case STAT_STR:
-      return 2;
-    break;
-    case STAT_DEX:
-      return 3;
-    break;
-    case STAT_INT:
-      return 1;
-    break;
-  }
-
-  return 9;
 }
 
 int update_ai_state(
@@ -759,45 +720,53 @@ int resolve_combat(
   uint64_t damage_die = 0;
   long long sp_change = 0;
 
+  // Attacker combat data
   unsigned int attacker_level = (unsigned int)entities[attacker_id][ENTITY_LEVEL];
   uint64_t attacker_str = get_entity_stat(entities, attacker_id, ENTITY_STR);
   uint64_t attacker_dex = get_entity_stat(entities, attacker_id, ENTITY_DEX);
   uint64_t attacker_int = get_entity_stat(entities, attacker_id, ENTITY_INT);
   uint64_t attacker_vit = get_entity_stat(entities, attacker_id, ENTITY_VIT);
   byte attacker_main_stat = get_main_stat(attacker_str, attacker_dex, attacker_int);
+  int attacker_weapon = (int)entities[attacker_id][ENTITY_ITEM1];
+  byte attacker_weapon_type = equipments[attacker_weapon][EQUIP_TYPE];
   
-  int attcker_moves = get_attack_count(attacker_main_stat); // Get amount of moves based on attack speed
-  uint64_t attacker_base_damage = (uint64_t)get_attack_base_damage(attacker_main_stat);
-  uint64_t attacker_stat_damage = get_attack_damage_stat(attacker_main_stat, attacker_str, attacker_dex, attacker_int);
+  // Get amount of moves based on attack speed
+  int attcker_moves = get_attack_count(attacker_weapon_type);
+  uint64_t attacker_base_damage = (uint64_t)get_attack_base_damage(attacker_weapon_type);
+  uint64_t attacker_stat_damage = get_attack_damage_stat(attacker_weapon_type, attacker_str, attacker_dex, attacker_int);
   double attacker_crit_multiplier = 12.0 / (double)attacker_base_damage;
+  long long attacker_special_cost = get_attack_cost(attacker_weapon_type);
+
   uint64_t attacker_armor_rating = (uint64_t)get_armor_rating(attacker_main_stat);
   long long attacker_sp_gain_damage_in = (long long)get_sp_gain_damage_in(attacker_main_stat);
   long long attacker_sp_gain_damage_out = (long long)get_sp_gain_damage_out(attacker_main_stat);
   uint64_t attacker_max_sp = get_max_sp(attacker_main_stat, attacker_str, attacker_dex, attacker_int, attacker_vit);
   long long attacker_max_sp_fraction = max((long long)1, (long long)(attacker_max_sp / 10));
-  long long attacker_special_cost = get_attack_cost(attacker_main_stat);
   long long attacker_crit_sp_cost = attacker_max_sp_fraction * attacker_special_cost;
 
+  // Defender combat data
   unsigned int defender_level = (unsigned int)entities[defender_id][ENTITY_LEVEL];
   uint64_t defender_str = get_entity_stat(entities, defender_id, ENTITY_STR);
   uint64_t defender_dex = get_entity_stat(entities, defender_id, ENTITY_DEX);
   uint64_t defender_int = get_entity_stat(entities, defender_id, ENTITY_INT);
   uint64_t defender_vit = get_entity_stat(entities, defender_id, ENTITY_VIT);
   byte defender_main_stat = get_main_stat(defender_str, defender_dex, defender_int);
+  int defender_weapon = (int)entities[defender_id][ENTITY_ITEM1];
+  byte defender_weapon_type = equipments[defender_weapon][EQUIP_TYPE];
 
-  int defender_moves = get_attack_count(defender_main_stat); // Get amount of moves based on attack speed
-  if (!can_counter_attack) {
-    defender_moves = 0;
-  }
-  uint64_t defender_base_damage = (uint64_t)get_attack_base_damage(defender_main_stat);
-  uint64_t defender_stat_damage = get_attack_damage_stat(defender_main_stat, defender_str, defender_dex, defender_int);
+  // Get amount of moves based on attack speed
+  int defender_moves = get_attack_count(defender_weapon_type);
+  if (!can_counter_attack) { defender_moves = 0; }
+  uint64_t defender_base_damage = (uint64_t)get_attack_base_damage(defender_weapon_type);
+  uint64_t defender_stat_damage = get_attack_damage_stat(defender_weapon_type, defender_str, defender_dex, defender_int);
   double defender_crit_multiplier = 12.0 / (double)defender_base_damage;
+  long long defender_special_cost = get_attack_cost(defender_weapon_type);
+
   uint64_t defender_armor_rating = (uint64_t)get_armor_rating(defender_main_stat);
   long long defender_sp_gain_damage_in = (long long)get_sp_gain_damage_in(defender_main_stat);
   long long defender_sp_gain_damage_out = (long long)get_sp_gain_damage_out(defender_main_stat);
   uint64_t defender_max_sp = get_max_sp(defender_main_stat, defender_str, defender_dex, defender_int, defender_vit);
   long long defender_max_sp_fraction = max((long long)1, (long long)(defender_max_sp / 10));
-  long long defender_special_cost = get_attack_cost(defender_main_stat);
   long long defender_crit_sp_cost = defender_max_sp_fraction * defender_special_cost;
 
   Serial.println("Combat start " + String(attacker_id) + "->" + String(defender_id));
@@ -816,7 +785,7 @@ int resolve_combat(
         damage_die = 12;
         sp_change = sp_change - attacker_crit_sp_cost;
       }
-      sp_change = sp_change + attacker_sp_gain_damage_out * attacker_max_sp_fraction;
+      sp_change = sp_change + (attacker_sp_gain_damage_out * attacker_max_sp_fraction);
       modify_entity_sp(entities, attacker_id, sp_change);
 
       // Defender damage mitigation
@@ -844,7 +813,7 @@ int resolve_combat(
         damage_die = 12;
         sp_change = sp_change - defender_crit_sp_cost;
       }
-      sp_change = sp_change + defender_sp_gain_damage_out * defender_max_sp_fraction;
+      sp_change = sp_change + (defender_sp_gain_damage_out * defender_max_sp_fraction);
       modify_entity_sp(entities, defender_id, sp_change);
 
       // Attacker damage mitigation
