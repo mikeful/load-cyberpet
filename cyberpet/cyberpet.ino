@@ -69,6 +69,13 @@ bool update_entity_navmap = false; // Room generation updates at start
 int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
 
+#define WORLD_DEAD_SIZE 1000
+byte world_tile_dead[WORLD_DEAD_SIZE];
+byte world_tile_dead_ttl[WORLD_DEAD_SIZE];
+byte world_tile_dead_value = 0;
+byte entity_index = 0;
+int tile_index = 0;
+
 unsigned int counter = 1;
 unsigned int tile = 0;
 unsigned int check_entity_x = 0;
@@ -205,6 +212,13 @@ void loop() {
         else if (room_exits & EXIT_W) { merge_dijkstra_maps(room_exit_navmap, room_exitw_navmap); }
         else if (room_exits & EXIT_E) { merge_dijkstra_maps(room_exit_navmap, room_exite_navmap); }
 
+        // Get entity dead bitmask for room
+        tile_index = squirrel_4d(world_x, world_y, area_x, area_y, content_seed) % WORLD_DEAD_SIZE;
+        world_tile_dead_value = 0;
+        if (world_tile_dead_ttl[tile_index] > 0) {
+          world_tile_dead_value = world_tile_dead[tile_index];
+        }
+
         // Setup entities and update navigation map leading to them
         clear_dijkstra_map(room_entity_navmap);
         for (int i = 0; i < MAP_W; i++) {
@@ -212,7 +226,7 @@ void loop() {
             room_entity_idmap[i][j] = 0;
           }
         }
-        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, room_entity_idmap, world_x, world_y, world_tile_data, area_x, area_y, content_seed);
+        setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, room_entity_idmap, world_x, world_y, world_tile_data, area_x, area_y, world_tile_dead_value, content_seed);
         build_dijkstra_map(room_entity_navmap, room_wallmap);
         update_entity_navmap = false;
 
@@ -355,6 +369,18 @@ void loop() {
             combat_result = resolve_combat(entities, ENTITY_ID_PLAYER, entity_id, true, action_seed + counter + (unsigned int)entity_id);
             if (combat_result == 1) {
               // Enemy died
+
+              // Update entity dead bitmask for room
+              tile_index = squirrel_4d(world_x, world_y, area_x, area_y, content_seed) % WORLD_DEAD_SIZE;
+              world_tile_dead_value = 0;
+              if (world_tile_dead_ttl[tile_index] > 0) {
+                world_tile_dead_value = world_tile_dead[tile_index];
+              }
+              entity_index = (byte)1 << (byte)entity_id;
+              world_tile_dead[tile_index] = world_tile_dead_value | entity_index;
+              world_tile_dead_ttl[tile_index] = 255;
+
+              // Handle exp and leveling
               level_ups = gain_exp((int)entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
 
               if (level_ups > 0) {
@@ -470,6 +496,15 @@ void loop() {
 
       entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
       entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y] = room_y;
+
+      // Tick upkeep
+      if (counter % 10 == 0) {
+        for (tile_index = 0; tile_index < WORLD_DEAD_SIZE; tile_index++) {
+          if (world_tile_dead_ttl[tile_index] > 0) {
+            world_tile_dead_ttl[tile_index]--;
+          }
+        }
+      }
 
       break; // STATE_ROOM
     case STATE_WORLDMAP:

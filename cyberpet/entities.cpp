@@ -41,6 +41,7 @@ int setup_room_entities(
   int world_x, int world_y,
   int world_tile_data[15],
   int area_x, int area_y,
+  byte world_tile_dead_bits,
   unsigned int seed
 ) {
   // Setup variables
@@ -48,10 +49,11 @@ int setup_room_entities(
   int position_tries = 0;
   int entity_x = 0;
   int entity_y = 0;
+  int entity_index = 0;
+  bool is_alive = false;
+  int setup_result = 0;
 
   for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
-    // TODO Check area entity alive bitmask
-    
     // Select position for entity
     entity_x = 0;
     entity_y = 0;
@@ -73,11 +75,18 @@ int setup_room_entities(
       position_tries++;
     }
 
-    // Mark position occupied and for entity navigation map building
-    room_entity_navmap[entity_x][entity_y] = 0;
-    room_entity_idmap[entity_x][entity_y] = entity_id;
+    // Check area entity dead bitmask
+    entity_index = (byte)1 << (byte)entity_id;
+    is_alive = !(bool)(world_tile_dead_bits & entity_index);
 
-    setup_entity(entities, entity_id, entity_x, entity_y, world_tile_data, room_seed);
+    setup_result = setup_entity(entities, entity_id, entity_x, entity_y, world_tile_data, is_alive, room_seed);
+
+    if (setup_result) {
+      // Mark position occupied and for entity navigation map building
+      room_entity_navmap[entity_x][entity_y] = 0;
+      room_entity_idmap[entity_x][entity_y] = entity_id;
+    }
+
   }
   
   return 1;
@@ -89,6 +98,7 @@ int setup_entity(
   int entity_x,
   int entity_y,
   int world_tile_data[15],
+  bool is_alive,
   unsigned int seed
 ) {
   if (entity_id == ENTITY_ID_PLAYER) { return 0; }
@@ -104,7 +114,7 @@ int setup_entity(
   entities[entity_id][ENTITY_INT] = (uint64_t)get_equip_stat(equipment_id, STAT_INT);
   entities[entity_id][ENTITY_VIT] = (uint64_t)get_equip_stat(equipment_id, STAT_VIT);
 
-  entities[entity_id][ENTITY_ALIVE] = 1;
+  entities[entity_id][ENTITY_ALIVE] = (uint64_t)is_alive;
   entities[entity_id][ENTITY_BLESSED_TICKS] = 0;
   entities[entity_id][ENTITY_CURSED_TICKS] = 0;
   entities[entity_id][ENTITY_STUNNED_TICKS] = 0;

@@ -68,6 +68,7 @@ int setup_room_entities(
   int world_x, int world_y,
   int world_tile_data[15],
   int area_x, int area_y,
+  byte world_tile_dead_bits,
   unsigned int seed
 );
 int setup_entity(
@@ -76,6 +77,7 @@ int setup_entity(
   int entity_x,
   int entity_y,
   int world_tile_data[15],
+  bool is_alive,
   unsigned int seed
 );
 
