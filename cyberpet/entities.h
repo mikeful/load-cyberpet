@@ -105,6 +105,7 @@ int get_attack_base_damage(byte main_stat);
 uint64_t get_attack_damage_stat(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int);
 uint64_t get_armor_rating(byte main_stat);
 int get_attack_count(byte main_stat);
+int get_attack_cost(byte main_stat);
 
 int update_ai_state(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
@@ -138,6 +139,7 @@ int resolve_combat(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   int attacker_id,
   int defender_id,
+  bool can_counter_attack,
   unsigned int seed
 );
 

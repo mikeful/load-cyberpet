@@ -352,7 +352,7 @@ void loop() {
 
           //if (check_entity_x == room_x && check_entity_y == room_y) {
           if (abs((int)check_entity_x - (int)room_x) + abs((int)check_entity_y - (int)room_y) == 1) {
-            combat_result = resolve_combat(entities, ENTITY_ID_PLAYER, entity_id, action_seed + counter + (unsigned int)entity_id);
+            combat_result = resolve_combat(entities, ENTITY_ID_PLAYER, entity_id, true, action_seed + counter + (unsigned int)entity_id);
             if (combat_result == 1) {
               // Enemy died
               level_ups = gain_exp((int)entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
