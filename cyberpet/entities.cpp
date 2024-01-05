@@ -629,9 +629,32 @@ int run_ai_state_movement(
     break;
     
     case AI_STATE_MELEE:
-    case AI_STATE_RANGED:
       // Try to move next to player for attacks
       if (squirrel(entity_id, seed + 831) % 4 != 0) {
+        target_distance = (int)entities[entity_id][ENTITY_AI_DATA1];
+        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, target_distance, seed);
+
+        if (ai_room_dir == DIR_N) { entity_y--; }
+        else if (ai_room_dir == DIR_S) { entity_y++; }
+        else if (ai_room_dir == DIR_W) { entity_x--; }
+        else if (ai_room_dir == DIR_E) { entity_x++; }
+      }
+
+      // Check that target tile is not occupied
+      if (ai_room_dir > 0 && room_entity_navmap[entity_x][entity_y] != 0) {
+        // Partially update entity nav map to allow other entities check for occupancy
+        room_entity_navmap[prev_entity_x][prev_entity_y] = 1;
+        room_entity_navmap[entity_x][entity_y] = 0;
+        
+        // Set updated entity coordinates
+        entities[entity_id][ENTITY_ROOM_X] = entity_x;
+        entities[entity_id][ENTITY_ROOM_Y] = entity_y;
+      }
+    break;
+
+    case AI_STATE_RANGED:
+      // Try to move next to player for attacks
+      if (squirrel(entity_id, seed + 831) % 5 != 0) {
         target_distance = (int)entities[entity_id][ENTITY_AI_DATA1];
         ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, target_distance, seed);
 
