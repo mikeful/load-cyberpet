@@ -65,7 +65,7 @@ int setup_room_entities(
       // Check that position is not occupied by other entity and is player accessible
       if (
         room_entity_navmap[entity_x][entity_y] == 0
-        || room_exit_navmap[entity_x][entity_y] <= 4
+        || room_exit_navmap[entity_x][entity_y] <= 5
         || room_exit_navmap[entity_x][entity_y] == DIJKSTRA_MAX
       ) {
         entity_x = 0;
