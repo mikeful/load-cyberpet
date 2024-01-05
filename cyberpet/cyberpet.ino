@@ -491,6 +491,10 @@ void loop() {
         room_y = 7;
         last_door = 0;
 
+        for (tile_index = 0; tile_index < WORLD_DEAD_SIZE; tile_index++) {
+          world_tile_dead_ttl[tile_index] = 0;
+        }
+
         new_room = true;
       }
 
