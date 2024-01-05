@@ -279,7 +279,7 @@ void loop() {
               ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 1, action_seed + counter);
             } else {
               // Entities in room but health low, flee
-              ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 7, action_seed + counter);
+              ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 4, action_seed + counter);
             }
           } else {
             // No entities in room, move to next room

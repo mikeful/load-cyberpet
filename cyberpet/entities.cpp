@@ -63,7 +63,7 @@ int setup_room_entities(
       // Check that position is not occupied by other entity and is player accessible
       if (
         room_entity_navmap[entity_x][entity_y] == 0
-        || room_exit_navmap[entity_x][entity_y] <= 3
+        || room_exit_navmap[entity_x][entity_y] <= 4
         || room_exit_navmap[entity_x][entity_y] == DIJKSTRA_MAX
       ) {
         entity_x = 0;
@@ -750,7 +750,7 @@ int resolve_combat(
   byte defender_main_stat = get_main_stat(defender_str, defender_dex, defender_int);
 
   int defender_moves = get_attack_count(defender_main_stat); // Get amount of moves based on attack speed
-  if (can_counter_attack) {
+  if (!can_counter_attack) {
     defender_moves = 0;
   }
   uint64_t defender_base_damage = (uint64_t)get_attack_base_damage(defender_main_stat);
