@@ -187,6 +187,7 @@ int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity
   return 1;
 }
 
+// TODO Support long long and uint64_t
 uint64_t modify_entity_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, long long change_amount) {
   uint64_t stat_str = get_entity_stat(entities, entity_id, STAT_STR);
   uint64_t stat_dex = get_entity_stat(entities, entity_id, STAT_DEX);
@@ -214,6 +215,7 @@ uint64_t modify_entity_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int enti
   return entities[entity_id][ENTITY_HP];
 }
 
+// TODO Support long long and uint64_t
 uint64_t modify_entity_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id, long long change_amount) {
   uint64_t stat_str = get_entity_stat(entities, entity_id, STAT_STR);
   uint64_t stat_dex = get_entity_stat(entities, entity_id, STAT_DEX);
@@ -250,14 +252,14 @@ int process_regen_tick(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
   uint64_t max_hp = get_max_hp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
-  uint64_t hp_gain_regen = (uint64_t)get_hp_gain_regen_tick(main_stat);
-  uint64_t hp_gain = max((uint64_t)1, (max_hp / 10) * hp_gain_regen);
-  modify_entity_hp(entities, entity_id, (long long)hp_gain);
+  long long hp_gain_regen = (long long)get_hp_gain_regen_tick(main_stat);
+  long long hp_gain = max((long long)1, (long long)(max_hp / 10)) * hp_gain_regen;
+  modify_entity_hp(entities, entity_id, hp_gain);
 
   uint64_t max_sp = get_max_sp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
-  uint64_t sp_gain_regen = (uint64_t)get_sp_gain_regen_tick(main_stat);
-  uint64_t sp_gain = max((uint64_t)1, (max_sp / 10) * sp_gain_regen);
-  modify_entity_sp(entities, entity_id, (long long)sp_gain);
+  long long sp_gain_regen = (long long)get_sp_gain_regen_tick(main_stat);
+  long long sp_gain = max((long long)1, (long long)(max_sp / 10)) * sp_gain_regen;
+  modify_entity_sp(entities, entity_id, sp_gain);
 
   return 1;
 }
@@ -769,11 +771,12 @@ int resolve_combat(
   uint64_t attacker_stat_damage = get_attack_damage_stat(attacker_main_stat, attacker_str, attacker_dex, attacker_int);
   double attacker_crit_multiplier = 12.0 / (double)attacker_base_damage;
   uint64_t attacker_armor_rating = (uint64_t)get_armor_rating(attacker_main_stat);
-  uint64_t attacker_sp_gain_damage_in = (uint64_t)get_sp_gain_damage_in(attacker_main_stat);
-  uint64_t attacker_sp_gain_damage_out = (uint64_t)get_sp_gain_damage_out(attacker_main_stat);
+  long long attacker_sp_gain_damage_in = (long long)get_sp_gain_damage_in(attacker_main_stat);
+  long long attacker_sp_gain_damage_out = (long long)get_sp_gain_damage_out(attacker_main_stat);
   uint64_t attacker_max_sp = get_max_sp(attacker_main_stat, attacker_str, attacker_dex, attacker_int, attacker_vit);
-  uint64_t attacker_special_cost = get_attack_cost(attacker_main_stat);
-  uint64_t attacker_crit_sp_cost = max((uint64_t)1, (attacker_max_sp / 10) * attacker_special_cost);
+  long long attacker_max_sp_fraction = max((long long)1, (long long)(attacker_max_sp / 10));
+  long long attacker_special_cost = get_attack_cost(attacker_main_stat);
+  long long attacker_crit_sp_cost = attacker_max_sp_fraction * attacker_special_cost;
 
   unsigned int defender_level = (unsigned int)entities[defender_id][ENTITY_LEVEL];
   uint64_t defender_str = get_entity_stat(entities, defender_id, ENTITY_STR);
@@ -790,11 +793,12 @@ int resolve_combat(
   uint64_t defender_stat_damage = get_attack_damage_stat(defender_main_stat, defender_str, defender_dex, defender_int);
   double defender_crit_multiplier = 12.0 / (double)defender_base_damage;
   uint64_t defender_armor_rating = (uint64_t)get_armor_rating(defender_main_stat);
-  uint64_t defender_sp_gain_damage_in = (uint64_t)get_sp_gain_damage_in(defender_main_stat);
-  uint64_t defender_sp_gain_damage_out = (uint64_t)get_sp_gain_damage_out(defender_main_stat);
+  long long defender_sp_gain_damage_in = (long long)get_sp_gain_damage_in(defender_main_stat);
+  long long defender_sp_gain_damage_out = (long long)get_sp_gain_damage_out(defender_main_stat);
   uint64_t defender_max_sp = get_max_sp(defender_main_stat, defender_str, defender_dex, defender_int, defender_vit);
-  uint64_t defender_special_cost = get_attack_cost(defender_main_stat);
-  uint64_t defender_crit_sp_cost = max((uint64_t)1, (defender_max_sp / 10) * defender_special_cost);
+  long long defender_max_sp_fraction = max((long long)1, (long long)(defender_max_sp / 10));
+  long long defender_special_cost = get_attack_cost(defender_main_stat);
+  long long defender_crit_sp_cost = defender_max_sp_fraction * defender_special_cost;
 
   Serial.println("Combat start " + String(attacker_id) + "->" + String(defender_id));
 
@@ -812,7 +816,7 @@ int resolve_combat(
         damage_die = 12;
         sp_change = sp_change - attacker_crit_sp_cost;
       }
-      sp_change = sp_change + attacker_sp_gain_damage_out * (attacker_max_sp / 10);
+      sp_change = sp_change + attacker_sp_gain_damage_out * attacker_max_sp_fraction;
       modify_entity_sp(entities, attacker_id, sp_change);
 
       // Defender damage mitigation
@@ -820,13 +824,13 @@ int resolve_combat(
       damage = damage / defender_armor_rating;
 
       Serial.println(String(combat_turns) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
-      if (modify_entity_hp(entities, defender_id, -damage) == 0) {
+      if (modify_entity_hp(entities, defender_id, -(long long)damage) == 0) {
         // Defender died from attack
         Serial.println("Combat end, defender died " + String(attacker_id) + "->" + String(defender_id));
         return 1;
       } else {
-        sp_change = defender_sp_gain_damage_in * (defender_max_sp / 10);
-        modify_entity_sp(entities, defender_id, +sp_change);
+        sp_change = defender_sp_gain_damage_in * defender_max_sp_fraction;
+        modify_entity_sp(entities, defender_id, sp_change);
       }
 
       // Turn end upkeep
@@ -840,7 +844,7 @@ int resolve_combat(
         damage_die = 12;
         sp_change = sp_change - defender_crit_sp_cost;
       }
-      sp_change = sp_change + defender_sp_gain_damage_out * (defender_max_sp / 10);
+      sp_change = sp_change + defender_sp_gain_damage_out * defender_max_sp_fraction;
       modify_entity_sp(entities, defender_id, sp_change);
 
       // Attacker damage mitigation
@@ -848,13 +852,13 @@ int resolve_combat(
       damage = damage / attacker_armor_rating;
 
       Serial.println(String(combat_turns) + " Defender hits " + String(damage) + "/" + String(entities[attacker_id][ENTITY_HP]) + ", SP " + String(sp_change));
-      if (modify_entity_hp(entities, attacker_id, -damage) == 0) {
+      if (modify_entity_hp(entities, attacker_id, -(long long)damage) == 0) {
         // Attacker died from counter attack
         Serial.println("Combat end, attacker died " + String(attacker_id) + "->" + String(defender_id));
         return 2;
       } else {
-        sp_change = attacker_sp_gain_damage_in * (attacker_max_sp / 10);
-        modify_entity_sp(entities, attacker_id, +sp_change);
+        sp_change = attacker_sp_gain_damage_in * attacker_max_sp_fraction;
+        modify_entity_sp(entities, attacker_id, sp_change);
       }
       
       // Turn end upkeep
