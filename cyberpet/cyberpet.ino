@@ -294,27 +294,25 @@ void loop() {
 
         // Navigate player in current room
         ai_room_dir = 0;
-        if (entities[ENTITY_ID_PLAYER][ENTITY_HP] > (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 2)) {
-          if ( 
-            room_entity_navmap[4][0] < DIJKSTRA_MAX
-            || room_entity_navmap[4][MAP_H - 2] < DIJKSTRA_MAX
-            || room_entity_navmap[0][7] < DIJKSTRA_MAX
-            || room_entity_navmap[MAP_W - 2][7] < DIJKSTRA_MAX
-          ) {
-            if (entities[ENTITY_ID_PLAYER][ENTITY_HP] >= get_entity_max_hp(entities, ENTITY_ID_PLAYER)) {
-              // Entities in room, try to visit them
-              ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 1, action_seed + counter);
-            } else {
-              // Entities in room but health low, flee
-              ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 4, action_seed + counter);
-            }
+        if ( 
+          room_entity_navmap[4][0] < DIJKSTRA_MAX
+          || room_entity_navmap[4][MAP_H - 2] < DIJKSTRA_MAX
+          || room_entity_navmap[0][7] < DIJKSTRA_MAX
+          || room_entity_navmap[MAP_W - 2][7] < DIJKSTRA_MAX
+        ) {
+          if (entities[ENTITY_ID_PLAYER][ENTITY_HP] > 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
+            // Entities in room, try to visit them
+            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 1, action_seed + counter);
           } else {
-            // No entities in room, move to next room
-            if (area_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
-            else if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
-            else if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
-            else if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
+            // Entities in room but health low, flee
+            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 4, action_seed + counter);
           }
+        } else {
+          // No entities in room, move to next room
+          if (area_dir == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
+          else if (area_dir == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
+          else if (area_dir == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
+          else if (area_dir == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
         }
 
         if (ai_room_dir == DIR_N) { room_y--; update_player_navmap = true; }
@@ -368,7 +366,7 @@ void loop() {
 
       // Temp collision/combat
       combat = true;
-      if (entities[ENTITY_ID_PLAYER][ENTITY_HP] < (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 2)) {
+      if (entities[ENTITY_ID_PLAYER][ENTITY_HP] < 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
         combat = false;
       }
       combat_result = 0;
