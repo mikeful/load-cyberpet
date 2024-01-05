@@ -532,15 +532,19 @@ int get_room_tile_index(int tile_x, int tile_y, byte tile_type, unsigned int see
   }
 }
 
-bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y) {
+bool room_tile_walkable(byte wall_map[MAP_W][MAP_H], int tile_x, int tile_y, bool doors_allowed) {
   switch(wall_map[tile_x][tile_y] ) {
     case ROOM_FLOOR:
+      // Goal ok
+      return true;
     case ROOM_EXIT_N:
     case ROOM_EXIT_E:
     case ROOM_EXIT_S:
     case ROOM_EXIT_W:
-      // Goal ok
-      return true;
+      if (doors_allowed) {
+        // Goal ok
+        return true;
+      }
     default:
       // Goal is not reachable
       return false;
@@ -580,22 +584,22 @@ int get_dijkstra_lowest(int dijkstra_map[MAP_W][MAP_H], int tile_x, int tile_y) 
   return current_lowest;
 }
 
-int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y) {
+int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], int goal_x, int goal_y, bool doors_allowed) {
   // Clear current map
   clear_dijkstra_map(dijkstra_map);
 
   // Sanity check that goal is not inside a wall
-  if (!room_tile_walkable(wall_map, goal_x, goal_y)) {
+  if (!room_tile_walkable(wall_map, goal_x, goal_y, doors_allowed)) {
     return 0;
   }
 
   // Set goal tile value
   dijkstra_map[goal_x][goal_y] = 0;
 
-  return build_dijkstra_map(dijkstra_map, wall_map);
+  return build_dijkstra_map(dijkstra_map, wall_map, doors_allowed);
 }
 
-int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H]) {
+int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_H], bool doors_allowed) {
   // Expecting that dijkstra_map is already set up with goal tiles
 
   // Calculate map tile values
@@ -607,7 +611,7 @@ int build_dijkstra_map(int dijkstra_map[MAP_W][MAP_H], byte wall_map[MAP_W][MAP_
 
     for (int i = 0; i < MAP_W; i++) {
       for (int j = 0; j < MAP_H; j++) {
-        if (room_tile_walkable(wall_map, i, j)) {
+        if (room_tile_walkable(wall_map, i, j, doors_allowed)) {
           neighbour_value = get_dijkstra_lowest(dijkstra_map, i, j);
 
           if (dijkstra_map[i][j] > neighbour_value + 1) {

@@ -201,10 +201,10 @@ void loop() {
         setup_room(room_wallmap, room_tilemap, world_x, world_y, world_tile_data, area_x, area_y, room_exits, content_seed);
 
         // Setup player navigation maps
-        build_dijkstra_map(room_exitn_navmap, room_wallmap, 4, 0);
-        build_dijkstra_map(room_exits_navmap, room_wallmap, 4, MAP_H - 1);
-        build_dijkstra_map(room_exitw_navmap, room_wallmap, 0, 7);
-        build_dijkstra_map(room_exite_navmap, room_wallmap, MAP_W - 1, 7);
+        build_dijkstra_map(room_exitn_navmap, room_wallmap, 4, 0, true);
+        build_dijkstra_map(room_exits_navmap, room_wallmap, 4, MAP_H - 1, true);
+        build_dijkstra_map(room_exitw_navmap, room_wallmap, 0, 7, true);
+        build_dijkstra_map(room_exite_navmap, room_wallmap, MAP_W - 1, 7, true);
 
         clear_dijkstra_map(room_exit_navmap);
         if (room_exits & EXIT_N) { merge_dijkstra_maps(room_exit_navmap, room_exitn_navmap); }
@@ -227,7 +227,7 @@ void loop() {
           }
         }
         setup_room_entities(entities, room_wallmap, room_exit_navmap, room_entity_navmap, room_entity_idmap, world_x, world_y, world_tile_data, area_x, area_y, world_tile_dead_value, content_seed);
-        build_dijkstra_map(room_entity_navmap, room_wallmap);
+        build_dijkstra_map(room_entity_navmap, room_wallmap, false);
         update_entity_navmap = false;
 
         // Setup upkeep
@@ -256,7 +256,7 @@ void loop() {
           }
         }
 
-        build_dijkstra_map(room_entity_navmap, room_wallmap);
+        build_dijkstra_map(room_entity_navmap, room_wallmap, false);
         update_entity_navmap = false;
       }
 
@@ -317,7 +317,7 @@ void loop() {
       if (update_player_navmap) {
         clear_dijkstra_map(room_player_navmap);
         room_player_navmap[room_x][room_y] = 0;
-        build_dijkstra_map(room_player_navmap, room_wallmap);
+        build_dijkstra_map(room_player_navmap, room_wallmap, false);
         update_player_navmap = false;
       }
 
