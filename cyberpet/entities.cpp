@@ -713,10 +713,11 @@ int resolve_combat(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   int attacker_id,
   int defender_id,
-  bool can_counter_attack,
+  bool can_crit,
   unsigned int seed
 ) {
   uint64_t damage = 0;
+  uint64_t defense = 0;
   uint64_t damage_die = 0;
   long long sp_change = 0;
 
@@ -730,15 +731,12 @@ int resolve_combat(
   int attacker_weapon = (int)entities[attacker_id][ENTITY_ITEM1];
   byte attacker_weapon_type = equipments[attacker_weapon][EQUIP_TYPE];
   
-  // Get amount of moves based on attack speed
-  int attcker_moves = get_attack_count(attacker_weapon_type);
+  int attacker_crit_chance = get_attack_count(attacker_weapon_type);
   uint64_t attacker_base_damage = (uint64_t)get_attack_base_damage(attacker_weapon_type);
   uint64_t attacker_stat_damage = get_attack_damage_stat(attacker_weapon_type, attacker_str, attacker_dex, attacker_int);
   double attacker_crit_multiplier = 12.0 / (double)attacker_base_damage;
   long long attacker_special_cost = get_attack_cost(attacker_weapon_type);
 
-  uint64_t attacker_armor_rating = (uint64_t)get_armor_rating(attacker_main_stat);
-  long long attacker_sp_gain_damage_in = (long long)get_sp_gain_damage_in(attacker_main_stat);
   long long attacker_sp_gain_damage_out = (long long)get_sp_gain_damage_out(attacker_main_stat);
   uint64_t attacker_max_sp = get_max_sp(attacker_main_stat, attacker_str, attacker_dex, attacker_int, attacker_vit);
   long long attacker_max_sp_fraction = max((long long)1, (long long)(attacker_max_sp / 10));
@@ -751,94 +749,45 @@ int resolve_combat(
   uint64_t defender_int = get_entity_stat(entities, defender_id, ENTITY_INT);
   uint64_t defender_vit = get_entity_stat(entities, defender_id, ENTITY_VIT);
   byte defender_main_stat = get_main_stat(defender_str, defender_dex, defender_int);
-  int defender_weapon = (int)entities[defender_id][ENTITY_ITEM1];
-  byte defender_weapon_type = equipments[defender_weapon][EQUIP_TYPE];
-
-  // Get amount of moves based on attack speed
-  int defender_moves = get_attack_count(defender_weapon_type);
-  if (!can_counter_attack) { defender_moves = 0; }
-  uint64_t defender_base_damage = (uint64_t)get_attack_base_damage(defender_weapon_type);
-  uint64_t defender_stat_damage = get_attack_damage_stat(defender_weapon_type, defender_str, defender_dex, defender_int);
-  double defender_crit_multiplier = 12.0 / (double)defender_base_damage;
-  long long defender_special_cost = get_attack_cost(defender_weapon_type);
 
   uint64_t defender_armor_rating = (uint64_t)get_armor_rating(defender_main_stat);
   long long defender_sp_gain_damage_in = (long long)get_sp_gain_damage_in(defender_main_stat);
-  long long defender_sp_gain_damage_out = (long long)get_sp_gain_damage_out(defender_main_stat);
   uint64_t defender_max_sp = get_max_sp(defender_main_stat, defender_str, defender_dex, defender_int, defender_vit);
   long long defender_max_sp_fraction = max((long long)1, (long long)(defender_max_sp / 10));
-  long long defender_crit_sp_cost = defender_max_sp_fraction * defender_special_cost;
 
-  Serial.println("Combat start " + String(attacker_id) + "->" + String(defender_id));
+  // Attacker attacks
+  damage_die = attacker_base_damage; // Normal damage
+  if (
+    can_crit
+    && entities[attacker_id][ENTITY_SP] > attacker_crit_sp_cost
+    && squirrel_2d(defender_id, attacker_id, seed) % 10 < attacker_crit_chance
+  ) {
+    // Critical damage, chance 20%
+    damage_die = 12;
+    sp_change = sp_change - attacker_crit_sp_cost;
+  }
+  sp_change = sp_change + (attacker_sp_gain_damage_out * attacker_max_sp_fraction);
+  modify_entity_sp(entities, attacker_id, sp_change);
 
-  int combat_turns = attcker_moves + defender_moves;
-  int current_turn = 0; // Attacker starts
-  while (combat_turns > 0) {
+  // Defender damage mitigation
+  damage = (1 + (squirrel_2d(defender_id, attacker_id, seed + 53) % damage_die)) * (uint64_t)(attacker_stat_damage * attacker_crit_multiplier);
+  defense = defender_vit * defender_armor_rating;
+  if (damage > defense) {
+    damage = damage - defense;
+  } else {
     damage = 0;
-    sp_change = 0;
-
-    if (current_turn == 0) {
-      // Attacker turn
-      damage_die = defender_base_damage; // Normal damage
-      if (entities[attacker_id][ENTITY_SP] > attacker_crit_sp_cost && squirrel_2d(combat_turns, attacker_id, seed) % 5 == 0) {
-        // Critical damage, chance 20%
-        damage_die = 12;
-        sp_change = sp_change - attacker_crit_sp_cost;
-      }
-      sp_change = sp_change + (attacker_sp_gain_damage_out * attacker_max_sp_fraction);
-      modify_entity_sp(entities, attacker_id, sp_change);
-
-      // Defender damage mitigation
-      damage = (1 + (squirrel_2d(combat_turns, attacker_id, seed + 53) % damage_die)) * (uint64_t)(attacker_stat_damage * attacker_crit_multiplier);
-      damage = damage / defender_armor_rating;
-
-      Serial.println(String(combat_turns) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
-      if (modify_entity_hp(entities, defender_id, -(long long)damage) == 0) {
-        // Defender died from attack
-        Serial.println("Combat end, defender died " + String(attacker_id) + "->" + String(defender_id));
-        return 1;
-      } else {
-        sp_change = defender_sp_gain_damage_in * defender_max_sp_fraction;
-        modify_entity_sp(entities, defender_id, sp_change);
-      }
-
-      // Turn end upkeep
-      if (attcker_moves > 0) { attcker_moves--; } // Attacker has turns left, reduce
-      if (defender_moves > 0) { current_turn = 1; } // Defender has turns left, swap turn
-    } else {
-      // Defender turn
-      damage_die = defender_base_damage; // Normal damage
-      if (entities[defender_id][ENTITY_SP] > defender_crit_sp_cost && squirrel_2d(combat_turns, defender_id, seed) % 5 == 0) {
-        // Critical damage, chance 20%
-        damage_die = 12;
-        sp_change = sp_change - defender_crit_sp_cost;
-      }
-      sp_change = sp_change + (defender_sp_gain_damage_out * defender_max_sp_fraction);
-      modify_entity_sp(entities, defender_id, sp_change);
-
-      // Attacker damage mitigation
-      damage = (1 + (squirrel_2d(combat_turns, defender_id, seed + 83) % damage_die)) * (uint64_t)(defender_stat_damage * defender_crit_multiplier);
-      damage = damage / attacker_armor_rating;
-
-      Serial.println(String(combat_turns) + " Defender hits " + String(damage) + "/" + String(entities[attacker_id][ENTITY_HP]) + ", SP " + String(sp_change));
-      if (modify_entity_hp(entities, attacker_id, -(long long)damage) == 0) {
-        // Attacker died from counter attack
-        Serial.println("Combat end, attacker died " + String(attacker_id) + "->" + String(defender_id));
-        return 2;
-      } else {
-        sp_change = attacker_sp_gain_damage_in * attacker_max_sp_fraction;
-        modify_entity_sp(entities, attacker_id, sp_change);
-      }
-      
-      // Turn end upkeep
-      if (defender_moves > 0) { defender_moves--; } // Defender has turns left, reduce
-      if (attcker_moves > 0) { current_turn = 0; } // Attacker has turns left, swap turn
-    }
-
-    combat_turns = attcker_moves + defender_moves;
   }
 
-  Serial.println("Combat end, survived " + String(attacker_id) + "->" + String(defender_id));
+  Serial.println(String(attacker_id) + "->" + String(defender_id) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
+
+  if (modify_entity_hp(entities, defender_id, -(long long)damage) == 0) {
+    // Defender died from attack
+    Serial.println(String(attacker_id) + "->" + String(defender_id) + " Combat end, defender died");
+    return 1;
+  } else {
+    sp_change = defender_sp_gain_damage_in * defender_max_sp_fraction;
+    modify_entity_sp(entities, defender_id, sp_change);
+  }
 
   return 0;
 }

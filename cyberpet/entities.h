@@ -141,7 +141,7 @@ int resolve_combat(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],
   int attacker_id,
   int defender_id,
-  bool can_counter_attack,
+  bool can_crit,
   unsigned int seed
 );
 
