@@ -343,41 +343,9 @@ void loop() {
         update_player_navmap = false;
       }
 
-      // Entity movement/action
-      if (counter % 2 == 0) {
-        for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
-          // Update AI state
-          int state_update_result = update_ai_state(
-            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, world_tile_data, action_seed + counter + (unsigned int)entity_id
-          );
-
-          // Run AI state movement
-          state_update_result = run_ai_state_movement(
-            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 539
-          );
-          if (state_update_result) { update_entity_navmap = true; }
-
-          // Run AI state action
-          //state_update_result = run_ai_state_action(
-          //  entities, entity_id, room_entity_navmap, room_player_navmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 591
-          //);
-          // TODO Display effects?
-          // if (state_update_result) { update_entity_navmap = true; }
-        }
-      }
-
-      // Regen tick
-      if (counter % 4 == 0) {
-        process_regen_tick(entities, ENTITY_ID_PLAYER);
-      } else if (counter % 8 == 0) {
-        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
-          process_regen_tick(entities, entity_id);
-        }
-      }
-
       // Temp collision/combat
       combat = true;
-      if (entities[ENTITY_ID_PLAYER][ENTITY_HP] < 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
+      if (counter % 2 == 0 && entities[ENTITY_ID_PLAYER][ENTITY_HP] < 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
         combat = false;
       }
       combat_result = 0;
@@ -423,6 +391,38 @@ void loop() {
 
             combat = false;
           }
+        }
+      }
+
+      // Entity movement/action
+      if (counter % 2 == 0) {
+        for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
+          // Update AI state
+          int state_update_result = update_ai_state(
+            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, world_tile_data, action_seed + counter + (unsigned int)entity_id
+          );
+
+          // Run AI state movement
+          state_update_result = run_ai_state_movement(
+            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 539
+          );
+          if (state_update_result) { update_entity_navmap = true; }
+
+          // Run AI state action
+          //state_update_result = run_ai_state_action(
+          //  entities, entity_id, room_entity_navmap, room_player_navmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 591
+          //);
+          // TODO Display effects?
+          // if (state_update_result) { update_entity_navmap = true; }
+        }
+      }
+
+      // Regen tick
+      if (counter % 4 == 0) {
+        process_regen_tick(entities, ENTITY_ID_PLAYER);
+      } else if (counter % 8 == 0) {
+        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
+          process_regen_tick(entities, entity_id);
         }
       }
 
