@@ -546,6 +546,13 @@ void loop() {
         }
       }
 
+      display1.setCursor(0, 120);
+      display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]) + "/" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
+
+      display1.setCursor(0, 128);
+      //display1.println(format_number2(player_level) + " " + format_number4(player_exp));
+      display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_SP]) + "/" + format_number3(get_entity_max_sp(entities, ENTITY_ID_PLAYER)));
+
       break; // STATE_ROOM
     case STATE_WORLDMAP:
       //int ok = get_simple_noisemap(noisemap2d, 0, counter, MAP_W, MAP_H, content_seed, 0.3);
