@@ -75,6 +75,29 @@ const String equipment_names[] = {
   "Axe",
 };
 
+#define EQUIP_EFFECT_MISS 0
+#define EQUIP_EFFECT_HIT 1
+#define EQUIP_EFFECT_CRIT 2
+
+const int weapon_effects_miss[4][3] = {
+  {213,226,274}, // EQUIP_TYPE_UNARMED
+  {213,226,274}, // EQUIP_TYPE_WEAPON
+  {213,226,274}, // EQUIP_TYPE_RANGED
+  {213,226,274}, // EQUIP_TYPE_MAGIC
+};
+const int weapon_effects_hit[4][4] = {
+  {214,229,230}, // EQUIP_TYPE_UNARMED
+  {214,229,230}, // EQUIP_TYPE_WEAPON
+  {282,278,277}, // EQUIP_TYPE_RANGED
+  {248,249,250}, // EQUIP_TYPE_MAGIC
+};
+const int weapon_effects_crit[4][4] = {
+  {215,235,221}, // EQUIP_TYPE_UNARMED
+  {215,235,221}, // EQUIP_TYPE_WEAPON
+  {133,134,135}, // EQUIP_TYPE_RANGED
+  {267,269,271}, // EQUIP_TYPE_MAGIC
+};
+
 //const byte items[][] = {};
 
 int get_equip_stat(int equip_id, byte stat);
@@ -87,5 +110,6 @@ uint64_t get_attack_damage_stat(byte weapon_type, uint64_t stat_str, uint64_t st
 uint64_t get_armor_rating(byte weapon_type);
 int get_attack_count(byte weapon_type);
 int get_attack_cost(byte weapon_type);
+int get_attack_effect(byte weapon_type, byte effect_type, unsigned int seed);
 
 #endif

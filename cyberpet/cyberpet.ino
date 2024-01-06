@@ -51,6 +51,7 @@ bool new_room = true;
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
 int room_entity_tilemap[MAP_W][MAP_H];
+int room_effect_tilemap[MAP_W][MAP_H];
 
 byte room_exits = 0;
 byte area_exits = 0;
@@ -134,8 +135,10 @@ void setup() {
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
       room_wallmap[i][j] = 0;
-      room_tilemap[i][j] = 0;
+      room_tilemap[i][j] = -1;
       room_entity_idmap[i][j] = 0;
+      room_entity_tilemap[i][j] = -1;
+      room_effect_tilemap[i][j] = -1;
     }
   }
 
@@ -186,6 +189,12 @@ void loop() {
     case STATE_MAINMENU:
       break; // STATE_MAINMENU
     case STATE_ROOM:
+      for (int i = 0; i < MAP_W; i++) {
+        for (int j = 0; j < MAP_H; j++) {
+          room_effect_tilemap[i][j] = -1;
+        }
+      }
+
       // Setup new room if entered
       if (new_room) {
         // Get current world tile and area
@@ -379,7 +388,15 @@ void loop() {
 
           //if (check_entity_x == room_x && check_entity_y == room_y) {
           if (abs((int)check_entity_x - (int)room_x) + abs((int)check_entity_y - (int)room_y) == 1) {
-            combat_result = resolve_combat(entities, ENTITY_ID_PLAYER, entity_id, true, action_seed + counter + (unsigned int)entity_id);
+            combat_result = resolve_combat(
+              entities,
+              ENTITY_ID_PLAYER,
+              entity_id,
+              true,
+              room_effect_tilemap,
+              action_seed + counter + (unsigned int)entity_id
+            );
+
             if (combat_result == 1) {
               // Enemy died
 
@@ -428,7 +445,10 @@ void loop() {
       // Draw room
       for (int i = 0; i < MAP_W; i++) {
         for (int j = 0; j < MAP_H; j++) {
-          if (room_entity_tilemap[i][j] != -1) {
+          if (room_effect_tilemap[i][j] != -1) {
+            // Draw effect
+            tile = room_effect_tilemap[i][j];
+          } else if (room_entity_tilemap[i][j] != -1) {
             // Draw entity
             tile = room_entity_tilemap[i][j];
           } else {

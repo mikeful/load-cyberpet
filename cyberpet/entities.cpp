@@ -714,14 +714,19 @@ int resolve_combat(
   int attacker_id,
   int defender_id,
   bool can_crit,
+  int effect_tilemap[MAP_W][MAP_H],
   unsigned int seed
 ) {
   uint64_t damage = 0;
   uint64_t defense = 0;
   uint64_t damage_die = 0;
+  bool was_crit = false;
   long long sp_change = 0;
+  int effect_tile = -1;
 
   // Attacker combat data
+  int attacker_x = entities[attacker_id][ENTITY_ROOM_X];
+  int attacker_y = entities[attacker_id][ENTITY_ROOM_Y];
   unsigned int attacker_level = (unsigned int)entities[attacker_id][ENTITY_LEVEL];
   uint64_t attacker_str = get_entity_stat(entities, attacker_id, ENTITY_STR);
   uint64_t attacker_dex = get_entity_stat(entities, attacker_id, ENTITY_DEX);
@@ -743,6 +748,8 @@ int resolve_combat(
   long long attacker_crit_sp_cost = attacker_max_sp_fraction * attacker_special_cost;
 
   // Defender combat data
+  int defender_x = entities[defender_id][ENTITY_ROOM_X];
+  int defender_y = entities[defender_id][ENTITY_ROOM_Y];
   unsigned int defender_level = (unsigned int)entities[defender_id][ENTITY_LEVEL];
   uint64_t defender_str = get_entity_stat(entities, defender_id, ENTITY_STR);
   uint64_t defender_dex = get_entity_stat(entities, defender_id, ENTITY_DEX);
@@ -762,7 +769,8 @@ int resolve_combat(
     && entities[attacker_id][ENTITY_SP] > attacker_crit_sp_cost
     && squirrel_2d(defender_id, attacker_id, seed) % 10 < attacker_crit_chance
   ) {
-    // Critical damage, chance 20%
+    // Critical damage, chance 10-30%
+    was_crit = true;
     damage_die = 12;
     sp_change = sp_change - attacker_crit_sp_cost;
   }
@@ -774,9 +782,13 @@ int resolve_combat(
   defense = defender_vit * defender_armor_rating;
   if (damage > defense) {
     damage = damage - defense;
+    effect_tile = get_attack_effect(attacker_weapon_type, was_crit ? EQUIP_EFFECT_CRIT : EQUIP_EFFECT_HIT, seed + 643);
   } else {
     damage = 0;
+    effect_tile = get_attack_effect(attacker_weapon_type, EQUIP_EFFECT_MISS, seed + 291);
   }
+
+  effect_tilemap[defender_x][defender_y] = effect_tile;
 
   Serial.println(String(attacker_id) + "->" + String(defender_id) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
 

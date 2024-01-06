@@ -142,6 +142,7 @@ int resolve_combat(
   int attacker_id,
   int defender_id,
   bool can_crit,
+  int effect_tilemap[MAP_W][MAP_H],
   unsigned int seed
 );
 

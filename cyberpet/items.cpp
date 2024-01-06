@@ -93,3 +93,18 @@ int get_attack_cost(byte weapon_type) {
   // Unarmed
   return 9;
 }
+
+int get_attack_effect(byte weapon_type, byte effect_type, unsigned int seed) {
+  int tile_variation = squirrel_2d((int)weapon_type, (int)effect_type, seed) % 3;
+
+  switch(effect_type) {
+    case EQUIP_EFFECT_MISS:
+      return weapon_effects_miss[weapon_type][tile_variation];
+    case EQUIP_EFFECT_HIT:
+      return weapon_effects_hit[weapon_type][tile_variation];
+    case EQUIP_EFFECT_CRIT:
+      return weapon_effects_crit[weapon_type][tile_variation];
+  }
+
+  return -1;
+}
