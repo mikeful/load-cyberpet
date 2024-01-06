@@ -20,6 +20,7 @@
 #define STATE_ROOM 2
 #define STATE_WORLDMAP 3
 #define STATE_GAMEMENU 4
+#define STATE_DEATH 5
 
 unsigned int content_seed = 0; // Determines world content, keep same
 unsigned int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
@@ -77,6 +78,7 @@ byte entity_index = 0;
 int tile_index = 0;
 
 unsigned int counter = 1;
+unsigned int counter_at = 0;
 unsigned int tile = 0;
 unsigned int check_entity_x = 0;
 unsigned int check_entity_y = 0;
@@ -491,7 +493,7 @@ void loop() {
         // Adventurer died
         player_level = 1;
         player_exp = 0;
-        //player_exp_multiplier = 1;
+        player_exp_multiplier++;
         setup_player_entity(entities, player_level);
 
         world_x = 0;
@@ -507,6 +509,9 @@ void loop() {
         }
 
         new_room = true;
+
+        counter_at = counter + 30;
+        game_state = STATE_DEATH;
       }
 
       entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X] = room_x;
@@ -545,13 +550,32 @@ void loop() {
       break; // STATE_WORLDMAP
     case STATE_GAMEMENU:
       break; // STATE_GAMEMENU
+    case STATE_DEATH:
+      display1.setCursor(0, 8);
+      display1.println("You died");
+
+      display1.drawBitmap(2 * 8, 3 * 8, tiles[1018], 8, 8, WHITE);
+      display1.drawBitmap(2 * 8, 4 * 8, tiles[1427], 8, 8, WHITE);
+      display1.drawBitmap(3 * 8, 4 * 8, tiles[117], 8, 8, WHITE);
+      display1.drawBitmap(5 * 8, 4 * 8, tiles[entities[ENTITY_ID_PLAYER][ENTITY_ICON]], 8, 8, WHITE);
+
+      display1.setCursor(0, 7 * 8);
+      display1.println("XP");
+      display1.setCursor(0, 8 * 8);
+      display1.println("bonus +1");
+
+      display1.setCursor(0, 10 * 8);
+      display1.println("Now X" + format_number3(player_exp_multiplier));
+
+      display1.setCursor(0, 128);
+      display1.println("Go again");
+
+      if (counter >= counter_at) {
+        game_state = STATE_ROOM;
+      }
+      
+      break; // STATE_DEATH
   }
-
-  display1.setCursor(0, 120);
-  display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]) + " " + format_number3(entities[ENTITY_ID_PLAYER][ENTITY_SP]));
-
-  display1.setCursor(0, 128);
-  display1.println(format_number3(player_level) + " " + format_number4(player_exp));
 
   // write the buffer to the display
   display1.display();
