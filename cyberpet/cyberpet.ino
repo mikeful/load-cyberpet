@@ -326,9 +326,15 @@ void loop() {
           if (entities[ENTITY_ID_PLAYER][ENTITY_HP] > 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
             // Entities in room, try to visit them
             ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 1, action_seed + counter);
+          } else if (last_door != 0 && entities[ENTITY_ID_PLAYER][ENTITY_HP] < get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 5) {
+            // Entities in room but really health low, flee to previous room
+            if (last_door == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
+            else if (last_door == DIR_S) { ai_room_dir = get_dijkstra_direction(room_exits_navmap, room_x, room_y, action_seed + counter); }
+            else if (last_door == DIR_W) { ai_room_dir = get_dijkstra_direction(room_exitw_navmap, room_x, room_y, action_seed + counter); }
+            else if (last_door == DIR_E) { ai_room_dir = get_dijkstra_direction(room_exite_navmap, room_x, room_y, action_seed + counter); }
           } else {
             // Entities in room but health low, flee
-            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 4, action_seed + counter);
+            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 5, action_seed + counter);
           }
         } else {
           if (entities[ENTITY_ID_PLAYER][ENTITY_HP] == get_entity_max_hp(entities, ENTITY_ID_PLAYER)) {

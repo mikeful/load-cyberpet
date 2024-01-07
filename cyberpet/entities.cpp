@@ -643,7 +643,7 @@ int run_ai_state_movement(
     case AI_STATE_FLEE:
       // Move away from player
       if (squirrel(entity_id, seed + 831) % 4 != 0) {
-        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 7, seed);
+        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 5, seed);
 
         if (ai_room_dir == DIR_N) { entity_y--; }
         else if (ai_room_dir == DIR_S) { entity_y++; }
