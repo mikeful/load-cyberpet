@@ -5,7 +5,7 @@ int gain_exp(int target_level, unsigned int *level, uint64_t *experience, unsign
   unsigned int multiplier_bonus = 0;
   uint64_t level_up_req = get_level_exp_req(*level + 1);
 
-  unsigned int gain = get_exp_gain(target_level, *multiplier);
+  unsigned int gain = get_exp_gain(*level, target_level, *multiplier);
   *experience += gain;
 
   while (*experience >= level_up_req) {
@@ -24,9 +24,13 @@ int gain_exp(int target_level, unsigned int *level, uint64_t *experience, unsign
   return level_ups;
 }
 
-unsigned int get_exp_gain(int target_level, int multiplier) {
+unsigned int get_exp_gain(int level, int target_level, int multiplier) {
+  float level_diff_factor = pow((float)target_level / (float)level, 2.0);
+
   unsigned int base_gain = exp_gain_base + (exp_gain_multiplier * (unsigned int)target_level);
-  return (unsigned int)multiplier * base_gain;
+  unsigned int mod_gain = (unsigned int)((float)base_gain * level_diff_factor);
+
+  return (unsigned int)multiplier * max((unsigned int)1, mod_gain);
 }
 
 uint64_t get_level_exp_req(int level) {

@@ -10,7 +10,7 @@ const float exp_base = 1000.0;
 const float exp_growth = 1.13;
 
 int gain_exp(int target_level, unsigned int* level, uint64_t* experience, unsigned int* multiplier, unsigned int seed);
-unsigned int get_exp_gain(int target_level, int multiplier);
+unsigned int get_exp_gain(int level, int target_level, int multiplier);
 uint64_t get_level_exp_req(int level);
 unsigned int get_level_up_bonus(int level, int current_multiplier, unsigned int seed);
 
