@@ -550,7 +550,7 @@ void loop() {
 
         new_room = true;
 
-        counter_at = counter + 30;
+        counter_at = counter + 40;
         game_state = STATE_DEATH;
       }
 
