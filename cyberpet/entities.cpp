@@ -674,6 +674,7 @@ int run_ai_state_action(
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
   int room_entity_idmap[MAP_W][MAP_H],
+  int room_effect_tilemap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 ) {
@@ -681,7 +682,11 @@ int run_ai_state_action(
 
   int current_state = (int)entities[entity_id][ENTITY_AI_STATE];
   int profile = (int)entities[entity_id][ENTITY_AI_PROFILE];
-  byte main_stat = get_entity_main_stat(entities, entity_id);
+
+  int player_x = entities[ENTITY_ID_PLAYER][ENTITY_ROOM_X];
+  int player_y = entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y];
+  int check_entity_x = entities[entity_id][ENTITY_ROOM_X];
+  int check_entity_y = entities[entity_id][ENTITY_ROOM_Y];
 
   switch(current_state) {
     case AI_STATE_START:
@@ -693,7 +698,10 @@ int run_ai_state_action(
     break;
     
     case AI_STATE_MELEE:
-    // Try to move next to player for attacks
+      // Try to move next to player for attacks
+      if (abs((int)check_entity_x - (int)player_x) + abs((int)check_entity_y - (int)player_y) == 1) {
+        resolve_combat(entities, entity_id, ENTITY_ID_PLAYER, false, room_effect_tilemap, seed);
+      }
     break;
     
     case AI_STATE_RANGED:

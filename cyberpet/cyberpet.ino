@@ -428,11 +428,9 @@ void loop() {
           if (state_update_result) { update_entity_navmap = true; }
 
           // Run AI state action
-          //state_update_result = run_ai_state_action(
-          //  entities, entity_id, room_entity_navmap, room_player_navmap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 591
-          //);
-          // TODO Display effects?
-          // if (state_update_result) { update_entity_navmap = true; }
+          state_update_result = run_ai_state_action(
+            entities, entity_id, room_entity_navmap, room_player_navmap, room_entity_idmap, room_effect_tilemap, world_tile_data, action_seed + counter + (unsigned int)entity_id + 591
+          );
         }
       }
 

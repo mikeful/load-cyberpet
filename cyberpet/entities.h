@@ -133,6 +133,7 @@ int run_ai_state_action(
   int room_entity_navmap[MAP_W][MAP_H],
   int room_player_navmap[MAP_W][MAP_H],
   int room_entity_idmap[MAP_W][MAP_H],
+  int room_effect_tilemap[MAP_W][MAP_H],
   int world_tile_data[15],
   unsigned int seed
 );
