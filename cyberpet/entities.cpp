@@ -278,12 +278,12 @@ int process_regen_tick(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_
 
   uint64_t max_hp = get_max_hp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
   long long hp_gain_regen = (long long)get_hp_gain_regen_tick(main_stat);
-  long long hp_gain = max((long long)1, (long long)(max_hp / 10)) * hp_gain_regen;
+  long long hp_gain = max((long long)1, (long long)(max_hp / 50)) * hp_gain_regen;
   modify_entity_hp(entities, entity_id, hp_gain);
 
   uint64_t max_sp = get_max_sp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
   long long sp_gain_regen = (long long)get_sp_gain_regen_tick(main_stat);
-  long long sp_gain = max((long long)1, (long long)(max_sp / 10)) * sp_gain_regen;
+  long long sp_gain = max((long long)1, (long long)(max_sp / 50)) * sp_gain_regen;
   modify_entity_sp(entities, entity_id, sp_gain);
 
   return 1;

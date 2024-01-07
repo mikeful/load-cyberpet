@@ -25,6 +25,8 @@
 unsigned int content_seed = 0; // Determines world content, keep same
 unsigned int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
 byte game_state = STATE_START;
+
+bool player_level_dead = false;
 unsigned int player_level = 1;
 uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
@@ -84,7 +86,7 @@ unsigned int tile = 0;
 unsigned int check_entity_x = 0;
 unsigned int check_entity_y = 0;
 int combat_result = 0;
-bool combat = false;
+bool should_combat = false;
 
 // Battery stuff
 int volt = 0;
@@ -189,6 +191,7 @@ void loop() {
     case STATE_MAINMENU:
       break; // STATE_MAINMENU
     case STATE_ROOM:
+      // Clear effects
       for (int i = 0; i < MAP_W; i++) {
         for (int j = 0; j < MAP_H; j++) {
           room_effect_tilemap[i][j] = -1;
@@ -259,6 +262,15 @@ void loop() {
         ai_room_dir = 0;
 
         new_room = false;
+      }
+
+      // Regen tick
+      if (counter % 4 == 0) {
+        process_regen_tick(entities, ENTITY_ID_PLAYER);
+      } else if (counter % 8 == 0) {
+        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
+          process_regen_tick(entities, entity_id);
+        }
       }
 
       // Update entities navigation map if needed
@@ -344,17 +356,20 @@ void loop() {
       }
 
       // Temp collision/combat
-      combat = true;
-      if (counter % 2 == 0 && entities[ENTITY_ID_PLAYER][ENTITY_HP] < 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
-        combat = false;
+      should_combat = true;
+      if (
+        counter % 2 == 0
+        && entities[ENTITY_ID_PLAYER][ENTITY_HP] < 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)
+      ) {
+        should_combat = false;
       }
+
       combat_result = 0;
       for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
-        if (combat && entities[entity_id][ENTITY_ALIVE] == 1) {
+        if (should_combat && entities[entity_id][ENTITY_ALIVE] == 1) {
           check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
           check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
 
-          //if (check_entity_x == room_x && check_entity_y == room_y) {
           if (abs((int)check_entity_x - (int)room_x) + abs((int)check_entity_y - (int)room_y) == 1) {
             combat_result = resolve_combat(
               entities,
@@ -384,12 +399,14 @@ void loop() {
               if (level_ups > 0) {
                 entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
                 update_entity_stats(entities, ENTITY_ID_PLAYER);
+
+                // TODO Status bar text toast
               }
 
               update_entity_navmap = true;
             }
 
-            combat = false;
+            should_combat = false;
           }
         }
       }
@@ -417,13 +434,9 @@ void loop() {
         }
       }
 
-      // Regen tick
-      if (counter % 4 == 0) {
-        process_regen_tick(entities, ENTITY_ID_PLAYER);
-      } else if (counter % 8 == 0) {
-        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
-          process_regen_tick(entities, entity_id);
-        }
+      // Check if player died from entity combat
+      if (entities[ENTITY_ID_PLAYER][ENTITY_ALIVE] == 0) {
+        player_level_dead = true;
       }
 
       // Update entity sprite map
@@ -509,8 +522,9 @@ void loop() {
         }
       }
 
-      if (combat_result == 2) {
+      if (player_level_dead) {
         // Adventurer died
+        player_level_dead = false;
         player_level = 1;
         player_exp = 0;
         player_exp_multiplier++;
