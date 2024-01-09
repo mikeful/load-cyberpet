@@ -25,7 +25,7 @@ int gain_exp(int target_level, unsigned int *level, uint64_t *experience, unsign
 }
 
 unsigned int get_exp_gain(int level, int target_level, int multiplier) {
-  float level_diff_factor = pow((float)target_level / (float)level, 2.0);
+  float level_diff_factor = pow((float)target_level / (float)level, 4.0);
 
   unsigned int base_gain = exp_gain_base + (exp_gain_multiplier * (unsigned int)target_level);
   unsigned int mod_gain = (unsigned int)((float)base_gain * level_diff_factor);
