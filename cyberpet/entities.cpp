@@ -206,8 +206,8 @@ int update_entity_stats(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity
   uint64_t stat_int = get_entity_stat(entities, entity_id, STAT_INT);
   uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
 
-  entities[entity_id][ENTITY_HP] = get_max_hp(stat_str, stat_dex, stat_int, stat_vit);
-  entities[entity_id][ENTITY_SP] = get_max_sp(stat_str, stat_dex, stat_int, stat_vit);
+  entities[entity_id][ENTITY_HP] = get_entity_max_hp(entities, entity_id);
+  entities[entity_id][ENTITY_SP] = get_entity_max_sp(entities, entity_id);
 
   return 1;
 }
@@ -219,7 +219,7 @@ uint64_t modify_entity_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int enti
   uint64_t stat_int = get_entity_stat(entities, entity_id, STAT_INT);
   uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
 
-  uint64_t max_hp = get_max_hp(stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t max_hp = get_entity_max_hp(entities, entity_id);
   uint64_t current_hp = entities[entity_id][ENTITY_HP];
 
   if (change_amount > 0) {
@@ -247,7 +247,7 @@ uint64_t modify_entity_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int enti
   uint64_t stat_int = get_entity_stat(entities, entity_id, STAT_INT);
   uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
 
-  uint64_t max_sp = get_max_sp(stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t max_sp = get_entity_max_sp(entities, entity_id);
   uint64_t current_sp = entities[entity_id][ENTITY_SP];
 
   if (change_amount > 0) {
@@ -276,12 +276,12 @@ int process_regen_tick(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_
   uint64_t stat_vit = get_entity_stat(entities, entity_id, STAT_VIT);
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
-  uint64_t max_hp = get_max_hp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t max_hp = get_entity_max_hp(entities, entity_id);
   long long hp_gain_regen = (long long)get_hp_gain_regen_tick(main_stat);
   long long hp_gain = max((long long)1, (long long)(max_hp / 50)) * hp_gain_regen;
   modify_entity_hp(entities, entity_id, hp_gain);
 
-  uint64_t max_sp = get_max_sp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
+  uint64_t max_sp = get_entity_max_sp(entities, entity_id);
   long long sp_gain_regen = (long long)get_sp_gain_regen_tick(main_stat);
   long long sp_gain = max((long long)1, (long long)(max_sp / 50)) * sp_gain_regen;
   modify_entity_sp(entities, entity_id, sp_gain);
@@ -317,44 +317,50 @@ byte get_entity_main_stat(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int enti
   return get_main_stat(stat_str, stat_dex, stat_int);
 }
 
-uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {
-  uint64_t stat_str = get_entity_stat(entities, entity_id, ENTITY_STR);
-  uint64_t stat_dex = get_entity_stat(entities, entity_id, ENTITY_DEX);
-  uint64_t stat_int = get_entity_stat(entities, entity_id, ENTITY_INT);
-  uint64_t stat_vit = get_entity_stat(entities, entity_id, ENTITY_VIT);
-
-  return get_max_hp(stat_str, stat_dex, stat_int, stat_vit);
-}
-
 uint64_t get_entity_max_sp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {
   uint64_t stat_str = get_entity_stat(entities, entity_id, ENTITY_STR);
   uint64_t stat_dex = get_entity_stat(entities, entity_id, ENTITY_DEX);
   uint64_t stat_int = get_entity_stat(entities, entity_id, ENTITY_INT);
   uint64_t stat_vit = get_entity_stat(entities, entity_id, ENTITY_VIT);
-
-  return get_max_sp(stat_str, stat_dex, stat_int, stat_vit);
-}
-
-uint64_t get_max_hp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
-  return get_max_hp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
-}
-
-uint64_t get_max_hp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
   switch(main_stat) {
     case STAT_STR:
-      return hp_base + stat_vit + (stat_str * stat_vit);
+      return (stat_str + stat_vit) * 1;
     break;
     case STAT_DEX:
-      return hp_base + stat_vit + (stat_dex * stat_vit);
+      return (stat_dex + stat_vit) * 1.67;
     break;
     case STAT_INT:
-      return hp_base + stat_vit + (stat_int * stat_vit);
+      return (stat_int + stat_vit) * 5;
     break;
   }
 
-  return hp_base + (stat_vit * 2);
+  return stat_vit;
+}
+
+uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_id) {
+  uint64_t stat_str = get_entity_stat(entities, entity_id, ENTITY_STR);
+  uint64_t stat_dex = get_entity_stat(entities, entity_id, ENTITY_DEX);
+  uint64_t stat_int = get_entity_stat(entities, entity_id, ENTITY_INT);
+  uint64_t stat_vit = get_entity_stat(entities, entity_id, ENTITY_VIT);
+  byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
+
+  uint64_t mod_hp = hp_base + (entity_id == 0 ? hp_player_bonus : 0);
+
+  switch(main_stat) {
+    case STAT_STR:
+      return mod_hp + stat_vit + (stat_str * stat_vit);
+    break;
+    case STAT_DEX:
+      return mod_hp + stat_vit + (stat_dex * stat_vit);
+    break;
+    case STAT_INT:
+      return mod_hp + stat_vit + (stat_int * stat_vit);
+    break;
+  }
+
+  return mod_hp + (stat_vit * 2);
 }
 
 int get_hp_gain_regen_tick(byte main_stat) {
@@ -371,28 +377,6 @@ int get_hp_gain_regen_tick(byte main_stat) {
   }
 
   return 2;
-}
-
-uint64_t get_max_sp(uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
-  byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
-
-  return get_max_sp(main_stat, stat_str, stat_dex, stat_int, stat_vit);
-}
-
-uint64_t get_max_sp(byte main_stat, uint64_t stat_str, uint64_t stat_dex, uint64_t stat_int, uint64_t stat_vit) {
-  switch(main_stat) {
-    case STAT_STR:
-      return (stat_str + stat_vit) * 1;
-    break;
-    case STAT_DEX:
-      return (stat_dex + stat_vit) * 1.67;
-    break;
-    case STAT_INT:
-      return (stat_int + stat_vit) * 5;
-    break;
-  }
-
-  return stat_vit;
 }
 
 int get_sp_gain_damage_in(byte main_stat) {
@@ -751,7 +735,7 @@ int resolve_combat(
   long long attacker_special_cost = get_attack_cost(attacker_weapon_type);
 
   long long attacker_sp_gain_damage_out = (long long)get_sp_gain_damage_out(attacker_main_stat);
-  uint64_t attacker_max_sp = get_max_sp(attacker_main_stat, attacker_str, attacker_dex, attacker_int, attacker_vit);
+  uint64_t attacker_max_sp = get_entity_max_sp(entities, attacker_id);
   long long attacker_max_sp_fraction = max((long long)1, (long long)(attacker_max_sp / 10));
   long long attacker_crit_sp_cost = attacker_max_sp_fraction * attacker_special_cost;
 
@@ -767,7 +751,7 @@ int resolve_combat(
 
   uint64_t defender_armor_rating = (uint64_t)get_armor_rating(defender_main_stat);
   long long defender_sp_gain_damage_in = (long long)get_sp_gain_damage_in(defender_main_stat);
-  uint64_t defender_max_sp = get_max_sp(defender_main_stat, defender_str, defender_dex, defender_int, defender_vit);
+  uint64_t defender_max_sp = get_entity_max_sp(entities, defender_id);
   long long defender_max_sp_fraction = max((long long)1, (long long)(defender_max_sp / 10));
 
   // Attacker attacks

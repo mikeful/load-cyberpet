@@ -62,7 +62,8 @@
 
 const float statpoint_growth_player = 1.11;
 const float statpoint_growth_enemy = 1.13;
-const uint64_t hp_base = 200;
+const uint64_t hp_base = 50;
+const uint64_t hp_player_bonus = 150;
 
 int setup_player_entity(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level);
 int setup_room_entities(
