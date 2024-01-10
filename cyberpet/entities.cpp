@@ -340,21 +340,23 @@ uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int ent
   uint64_t stat_vit = get_entity_stat(entities, entity_id, ENTITY_VIT);
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
+  unsigned int entity_level = (unsigned int)entities[entity_id][ENTITY_LEVEL];
+
   uint64_t mod_hp = hp_base + (entity_id == 0 ? hp_player_bonus : 0);
 
   switch(main_stat) {
     case STAT_STR:
-      return mod_hp + stat_vit + (stat_str * stat_vit);
+      return mod_hp + entity_level + (stat_str * stat_vit);
     break;
     case STAT_DEX:
-      return mod_hp + stat_vit + (stat_dex * stat_vit);
+      return mod_hp + entity_level + (stat_dex * stat_vit);
     break;
     case STAT_INT:
-      return mod_hp + stat_vit + (stat_int * stat_vit);
+      return mod_hp + entity_level + (stat_int * stat_vit);
     break;
   }
 
-  return mod_hp + (stat_vit * 2);
+  return mod_hp + entity_level + (stat_vit * 2);
 }
 
 int get_hp_gain_regen_tick(byte main_stat) {
@@ -665,6 +667,7 @@ int run_ai_state_action(
   int player_y = entities[ENTITY_ID_PLAYER][ENTITY_ROOM_Y];
   int check_entity_x = entities[entity_id][ENTITY_ROOM_X];
   int check_entity_y = entities[entity_id][ENTITY_ROOM_Y];
+  int player_distance = room_player_navmap[check_entity_x][check_entity_y];
 
   switch(current_state) {
     case AI_STATE_START:
@@ -677,13 +680,16 @@ int run_ai_state_action(
     
     case AI_STATE_MELEE:
       // Try to move next to player for attacks
-      if (abs((int)check_entity_x - (int)player_x) + abs((int)check_entity_y - (int)player_y) == 1) {
+      if (player_distance == 1) {
         resolve_combat(entities, entity_id, ENTITY_ID_PLAYER, false, room_effect_tilemap, seed);
       }
     break;
     
     case AI_STATE_RANGED:
-    // Try to move next to player for attacks
+      // Try to move next to player for attacks
+      if (player_distance == 2 || player_distance == 3) {
+        resolve_combat(entities, entity_id, ENTITY_ID_PLAYER, false, room_effect_tilemap, seed);
+      }
     break;
     
     case AI_STATE_FLEE:
