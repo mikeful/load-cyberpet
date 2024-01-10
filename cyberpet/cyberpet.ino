@@ -32,11 +32,16 @@ unsigned int player_level = 1;
 uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
 int level_ups = 0;
+uint64_t player_gold = 0;
 
 uint64_t player_prev_hp = 0;
 long long player_diff_hp = 0;
 uint64_t player_prev_sp = 0;
 long long player_diff_sp = 0;
+uint64_t player_prev_exp = 0;
+long long player_diff_exp = 0;
+uint64_t player_prev_gold = 0;
+long long player_diff_gold = 0;
 
 int world_x = 0;
 int world_y = 0;
@@ -285,6 +290,11 @@ void loop() {
         area_dir = 0;
         ai_room_dir = 0;
 
+        toast_message1 = " ";
+        toast_message2 = " Lvl" + format_number3(world_tile_data[TILE_LEVEL]);
+        toast_message_ticks1 = 5;
+        toast_message_ticks2 = 5;
+
         new_room = false;
       }
 
@@ -315,6 +325,8 @@ void loop() {
       if (counter % 2 == 0) {
         player_prev_hp = entities[ENTITY_ID_PLAYER][ENTITY_HP];
         player_prev_sp = entities[ENTITY_ID_PLAYER][ENTITY_SP];
+        player_prev_exp = player_exp;
+        player_prev_gold = player_gold;
 
         // TODO World tile target navigation, try to go to tile with equal level
 
@@ -423,6 +435,9 @@ void loop() {
                 action_seed + counter
               );
 
+              // Add gold
+              player_gold = player_gold + entities[entity_id][ENTITY_LEVEL];
+
               update_entity_navmap = true;
             }
 
@@ -472,6 +487,9 @@ void loop() {
                   action_seed + counter
                 );
 
+                // Add gold
+                player_gold = player_gold + entities[entity_id][ENTITY_LEVEL];
+
                 update_entity_navmap = true;
               }
 
@@ -481,15 +499,24 @@ void loop() {
         }
       }
 
+      // Check to display messages
       if (level_ups > 0) {
+        // Player leveled up
         entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
         update_entity_stats(entities, ENTITY_ID_PLAYER);
 
-        // Display status bar toast message
         toast_message1 = "Level up";
         toast_message2 = "  " + format_number3(player_level);
         toast_message_ticks1 = 10;
         toast_message_ticks2 = 10;
+      } else if (combat_result == 1) {
+        player_diff_exp = player_exp - player_prev_exp;
+        player_diff_gold = player_gold - player_prev_gold;
+
+        toast_message1 = "Kill+" + format_number2(player_diff_gold) + "G";
+        toast_message2 = "+" + format_number4(player_diff_exp) + "XP";
+        toast_message_ticks1 = 3;
+        toast_message_ticks2 = 3;
       }
 
       // Entity movement/action
