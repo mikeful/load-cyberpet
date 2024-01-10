@@ -198,6 +198,15 @@ void loop() {
         }
       }
 
+      // Regen tick
+      if (counter % 4 == 0) {
+        process_regen_tick(entities, ENTITY_ID_PLAYER);
+      } else if (counter % 8 == 0) {
+        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
+          process_regen_tick(entities, entity_id);
+        }
+      }
+
       // Setup new room if entered
       if (new_room) {
         // Get current world tile and area
@@ -262,15 +271,6 @@ void loop() {
         ai_room_dir = 0;
 
         new_room = false;
-      }
-
-      // Regen tick
-      if (counter % 4 == 0) {
-        process_regen_tick(entities, ENTITY_ID_PLAYER);
-      } else if (counter % 8 == 0) {
-        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
-          process_regen_tick(entities, entity_id);
-        }
       }
 
       // Update entities navigation map if needed
