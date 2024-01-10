@@ -85,6 +85,7 @@ unsigned int counter_at = 0;
 unsigned int tile = 0;
 unsigned int check_entity_x = 0;
 unsigned int check_entity_y = 0;
+int entity_distance = 1;
 int combat_result = 0;
 bool should_combat = false;
 
@@ -363,22 +364,17 @@ void loop() {
         update_player_navmap = false;
       }
 
-      // Temp collision/combat
+      // Scan melee combat targets and attack
       should_combat = true;
-      if (
-        counter % 2 == 0
-        && entities[ENTITY_ID_PLAYER][ENTITY_HP] < 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)
-      ) {
-        should_combat = false;
-      }
-
       combat_result = 0;
+      level_ups = 0;
       for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
         if (should_combat && entities[entity_id][ENTITY_ALIVE] == 1) {
           check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
           check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
+          entity_distance = room_player_navmap[check_entity_x][check_entity_y];
 
-          if (abs((int)check_entity_x - (int)room_x) + abs((int)check_entity_y - (int)room_y) == 1) {
+          if (entity_distance == 1) {
             combat_result = resolve_combat(
               entities,
               ENTITY_ID_PLAYER,
@@ -402,14 +398,13 @@ void loop() {
               world_tile_dead_ttl[tile_index] = 255;
 
               // Handle exp and leveling
-              level_ups = gain_exp((int)entities[entity_id][ENTITY_LEVEL], &player_level, &player_exp, &player_exp_multiplier, action_seed + counter);
-
-              if (level_ups > 0) {
-                entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
-                update_entity_stats(entities, ENTITY_ID_PLAYER);
-
-                // TODO Status bar text toast
-              }
+              level_ups = gain_exp(
+                (int)entities[entity_id][ENTITY_LEVEL],
+                &player_level,
+                &player_exp,
+                &player_exp_multiplier,
+                action_seed + counter
+              );
 
               update_entity_navmap = true;
             }
@@ -417,6 +412,63 @@ void loop() {
             should_combat = false;
           }
         }
+      }
+
+      // Scan ranged combat targets if there was no melee attack
+      // TODO Allow ranged attacks only if player has ranged equipment?
+      if (should_combat) {
+        for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
+          if (entities[entity_id][ENTITY_ALIVE] == 1) {
+            check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
+            check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
+            entity_distance = room_player_navmap[check_entity_x][check_entity_y];
+
+            if (entity_distance == 2 || entity_distance == 3) {
+              combat_result = resolve_combat(
+                entities,
+                ENTITY_ID_PLAYER,
+                entity_id,
+                true,
+                room_effect_tilemap,
+                action_seed + counter + (unsigned int)entity_id
+              );
+
+              if (combat_result == 1) {
+                // Enemy died
+
+                // Update entity dead bitmask for room
+                tile_index = squirrel_4d(world_x, world_y, area_x, area_y, content_seed) % WORLD_DEAD_SIZE;
+                world_tile_dead_value = 0;
+                if (world_tile_dead_ttl[tile_index] > 0) {
+                  world_tile_dead_value = world_tile_dead[tile_index];
+                }
+                entity_index = (byte)1 << (byte)entity_id;
+                world_tile_dead[tile_index] = world_tile_dead_value | entity_index;
+                world_tile_dead_ttl[tile_index] = 255;
+
+                // Handle exp and leveling
+                level_ups = gain_exp(
+                  (int)entities[entity_id][ENTITY_LEVEL],
+                  &player_level,
+                  &player_exp,
+                  &player_exp_multiplier,
+                  action_seed + counter
+                );
+
+                update_entity_navmap = true;
+              }
+
+              should_combat = false;
+            }
+          }
+        }
+      }
+
+      if (level_ups > 0) {
+        entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
+        update_entity_stats(entities, ENTITY_ID_PLAYER);
+
+        // TODO Status bar text toast
       }
 
       // Entity movement/action
@@ -570,8 +622,8 @@ void loop() {
       display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]) + "/" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
 
       display1.setCursor(0, 128);
-      //display1.println(format_number2(player_level) + " " + format_number4(player_exp));
-      display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_SP]) + "/" + format_number3(get_entity_max_sp(entities, ENTITY_ID_PLAYER)));
+      display1.println(format_number2(player_level) + " " + format_number4(player_exp));
+      //display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_SP]) + "/" + format_number3(get_entity_max_sp(entities, ENTITY_ID_PLAYER)));
 
       break; // STATE_ROOM
     case STATE_WORLDMAP:
