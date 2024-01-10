@@ -94,6 +94,11 @@ int entity_distance = 1;
 int combat_result = 0;
 bool should_combat = false;
 
+String toast_message1 = "";
+unsigned int toast_message_ticks1 = 0;
+String toast_message2 = "";
+unsigned int toast_message_ticks2 = 0;
+
 // Battery stuff
 int volt = 0;
 int volt2 = 0;
@@ -207,9 +212,6 @@ void loop() {
       // Regen tick
       if (counter % 4 == 0) {
         // Regen player
-        player_prev_hp = entities[ENTITY_ID_PLAYER][ENTITY_HP];
-        player_prev_sp = entities[ENTITY_ID_PLAYER][ENTITY_SP];
-
         process_regen_tick(entities, ENTITY_ID_PLAYER);
       }
       if (counter % 8 == 0) {
@@ -310,6 +312,9 @@ void loop() {
 
       // Player movement/action
       if (counter % 2 == 0) {
+        player_prev_hp = entities[ENTITY_ID_PLAYER][ENTITY_HP];
+        player_prev_sp = entities[ENTITY_ID_PLAYER][ENTITY_SP];
+
         // TODO World tile target navigation, try to go to tile with equal level
 
         // TODO Area room target navigation, clear all rooms in area
@@ -479,7 +484,11 @@ void loop() {
         entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
         update_entity_stats(entities, ENTITY_ID_PLAYER);
 
-        // TODO Status bar text toast
+        // Display status bar toast message
+        toast_message1 = "Level up";
+        toast_message2 = "  " + format_number3(player_level);
+        toast_message_ticks1 = 10;
+        toast_message_ticks2 = 10;
       }
 
       // Entity movement/action
@@ -629,10 +638,12 @@ void loop() {
         for (tile_index = 0; tile_index < WORLD_DEAD_SIZE; tile_index++) {
           world_tile_dead_ttl[tile_index] = 0;
         }
+        toast_message_ticks1 = 0;
+        toast_message_ticks2 = 0;
 
         new_room = true;
 
-        counter_at = counter + 40;
+        counter_at = counter + 50;
         game_state = STATE_DEATH;
       }
 
@@ -650,22 +661,37 @@ void loop() {
 
       // Draw status bars
       display1.setCursor(0, 120);
-      display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]));
-      
-      player_diff_hp = (long long)entities[ENTITY_ID_PLAYER][ENTITY_HP] - (long long)player_prev_hp;
-      display1.setCursor(4 * 8, 120);
-
-      if (player_diff_hp < 0) {
-        display1.println("-" + format_number3(abs(player_diff_hp)));
-      } else if (player_diff_hp > 0) {
-        display1.println("+" + format_number3(player_diff_hp));
+      if (toast_message_ticks1 > 0) {
+        // Message active, display it
+        display1.println(toast_message1);
       } else {
-        display1.println("/" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
+        // No message, display health
+        display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]));
+        
+        player_diff_hp = (long long)entities[ENTITY_ID_PLAYER][ENTITY_HP] - (long long)player_prev_hp;
+        display1.setCursor(4 * 8, 120);
+
+        if (player_diff_hp < 0) {
+          display1.println("-" + format_number3(abs(player_diff_hp)));
+        } else if (player_diff_hp > 0) {
+          display1.println("+" + format_number3(player_diff_hp));
+        } else {
+          display1.println("/" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
+        }
       }
 
-      display1.setCursor(0, 128);
-      display1.println(format_number2(player_level) + " " + format_number4(player_exp));
-      //display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_SP]) + "/" + format_number3(get_entity_max_sp(entities, ENTITY_ID_PLAYER)));
+      if (toast_message_ticks2 > 0) {
+        // Message active, display it
+        display1.println(toast_message2);
+      } else {
+        // No message, display skill points
+        display1.setCursor(0, 128);
+        display1.println(format_number2(player_level) + " " + format_number4(player_exp));
+        //display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_SP]) + "/" + format_number3(get_entity_max_sp(entities, ENTITY_ID_PLAYER)));
+      }
+
+      if (toast_message_ticks1 > 0) { toast_message_ticks1--; }
+      if (toast_message_ticks2 > 0) { toast_message_ticks2--; }
 
       break; // STATE_ROOM
     case STATE_WORLDMAP:
