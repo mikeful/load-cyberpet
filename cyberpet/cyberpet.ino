@@ -26,7 +26,8 @@ unsigned int content_seed = 0; // Determines world content, keep same
 unsigned int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
 byte game_state = STATE_START;
 
-bool player_level_dead = false;
+bool player_dead = false;
+bool player_dead_setup = false;
 unsigned int player_level = 1;
 uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
@@ -533,7 +534,7 @@ void loop() {
 
       // Check if player died from entity combat
       if (entities[ENTITY_ID_PLAYER][ENTITY_ALIVE] == 0) {
-        player_level_dead = true;
+        player_dead = true;
       }
 
       // Update entity sprite map
@@ -619,31 +620,12 @@ void loop() {
         }
       }
 
-      if (player_level_dead) {
+      if (player_dead) {
         // Adventurer died
-        player_level_dead = false;
-        player_level = 1;
-        player_exp = 0;
-        player_exp_multiplier++;
-        setup_player_entity(entities, player_level);
-
-        world_x = 0;
-        world_y = 0;
-        area_x = 1;
-        area_y = 1;
-        room_x = 4;
-        room_y = 7;
-        last_door = 0;
-
-        for (tile_index = 0; tile_index < WORLD_DEAD_SIZE; tile_index++) {
-          world_tile_dead_ttl[tile_index] = 0;
-        }
-        toast_message_ticks1 = 0;
-        toast_message_ticks2 = 0;
-
-        new_room = true;
-
+        player_dead = false;
+        player_dead_setup = false;
         counter_at = counter + 50;
+
         game_state = STATE_DEATH;
       }
 
@@ -718,6 +700,34 @@ void loop() {
     case STATE_GAMEMENU:
       break; // STATE_GAMEMENU
     case STATE_DEATH:
+      if (player_dead_setup == false) {
+        // Run one time setup for death screen
+        player_level = 1;
+        player_exp = 0;
+        setup_player_entity(entities, player_level);
+
+        world_x = 0;
+        world_y = 0;
+        area_x = 1;
+        area_y = 1;
+        room_x = 4;
+        room_y = 7;
+        last_door = 0;
+
+        for (tile_index = 0; tile_index < WORLD_DEAD_SIZE; tile_index++) {
+          world_tile_dead_ttl[tile_index] = 0;
+        }
+        toast_message_ticks1 = 0;
+        toast_message_ticks2 = 0;
+
+        new_room = true;
+
+        // TODO Handle bonus rolls with gold instead of static bonus
+        player_exp_multiplier++;
+
+        player_dead_setup = true;
+      }
+
       display1.setCursor(0, 8);
       display1.println("You died");
 
@@ -738,6 +748,9 @@ void loop() {
       display1.println("Go again");
 
       if (counter >= counter_at) {
+        // Death screen timer ran out, clear stuff and start again
+        player_gold = 0;
+
         game_state = STATE_ROOM;
       }
       
