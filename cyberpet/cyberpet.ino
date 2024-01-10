@@ -32,6 +32,11 @@ uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
 int level_ups = 0;
 
+uint64_t player_prev_hp = 0;
+long long player_diff_hp = 0;
+uint64_t player_prev_sp = 0;
+long long player_diff_sp = 0;
+
 int world_x = 0;
 int world_y = 0;
 int world_target_x = 0;
@@ -201,9 +206,15 @@ void loop() {
 
       // Regen tick
       if (counter % 4 == 0) {
+        // Regen player
+        player_prev_hp = entities[ENTITY_ID_PLAYER][ENTITY_HP];
+        player_prev_sp = entities[ENTITY_ID_PLAYER][ENTITY_SP];
+
         process_regen_tick(entities, ENTITY_ID_PLAYER);
-      } else if (counter % 8 == 0) {
-        for (int entity_id = 0; entity_id < ENTITY_SIZE; entity_id++) {
+      }
+      if (counter % 8 == 0) {
+        // Regen entities
+        for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
           process_regen_tick(entities, entity_id);
         }
       }
@@ -637,8 +648,20 @@ void loop() {
         }
       }
 
+      // Draw status bars
       display1.setCursor(0, 120);
-      display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]) + "/" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
+      display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_HP]));
+      
+      player_diff_hp = (long long)entities[ENTITY_ID_PLAYER][ENTITY_HP] - (long long)player_prev_hp;
+      display1.setCursor(4 * 8, 120);
+
+      if (player_diff_hp < 0) {
+        display1.println("-" + format_number3(abs(player_diff_hp)));
+      } else if (player_diff_hp > 0) {
+        display1.println("+" + format_number3(player_diff_hp));
+      } else {
+        display1.println("/" + format_number3(get_entity_max_hp(entities, ENTITY_ID_PLAYER)));
+      }
 
       display1.setCursor(0, 128);
       display1.println(format_number2(player_level) + " " + format_number4(player_exp));
