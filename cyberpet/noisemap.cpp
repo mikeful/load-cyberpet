@@ -265,7 +265,7 @@ bool is_poi_small(int world_x, int world_y, int tile_value, int poi_prob, int po
 }
 
 int get_world_tile(int tile_data[15], int world_x, int world_y, int time_step, unsigned int seed) {
-    unsigned int level = abs(world_x) + abs(world_y);
+    unsigned int level = 1 + abs(world_x) + abs(world_y);
 
     // Height and biome
     int height_value = get_simple_noisepoint(
