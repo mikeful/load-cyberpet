@@ -271,14 +271,18 @@ int process_regen_tick(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int entity_
   byte main_stat = get_main_stat(stat_str, stat_dex, stat_int);
 
   uint64_t max_hp = get_entity_max_hp(entities, entity_id);
-  long long hp_gain_regen = (long long)get_hp_gain_regen_tick(main_stat);
-  long long hp_gain = max((long long)1, (long long)(max_hp / 50)) * hp_gain_regen;
-  modify_entity_hp(entities, entity_id, hp_gain);
+  if (entities[entity_id][ENTITY_HP] < max_hp) {
+    long long hp_gain_regen = (long long)get_hp_gain_regen_tick(main_stat);
+    long long hp_gain = max((long long)1, (long long)(max_hp / 50) * hp_gain_regen) ;
+    modify_entity_hp(entities, entity_id, hp_gain);
+  }
 
   uint64_t max_sp = get_entity_max_sp(entities, entity_id);
-  long long sp_gain_regen = (long long)get_sp_gain_regen_tick(main_stat);
-  long long sp_gain = max((long long)1, (long long)(max_sp / 50)) * sp_gain_regen;
-  modify_entity_sp(entities, entity_id, sp_gain);
+  if (entities[entity_id][ENTITY_SP] < max_sp) {
+    long long sp_gain_regen = (long long)get_sp_gain_regen_tick(main_stat);
+    long long sp_gain = max((long long)1, (long long)(max_sp / 50) * sp_gain_regen);
+    modify_entity_sp(entities, entity_id, sp_gain);
+  }
 
   return 1;
 }
@@ -342,7 +346,7 @@ uint64_t get_entity_max_hp(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], int ent
 
   unsigned int entity_level = (unsigned int)entities[entity_id][ENTITY_LEVEL];
 
-  uint64_t mod_hp = hp_base + (entity_id == 0 ? hp_player_bonus : 0);
+  uint64_t mod_hp = hp_base + (entity_id == ENTITY_ID_PLAYER ? hp_player_bonus : 0);
 
   switch(main_stat) {
     case STAT_STR:
