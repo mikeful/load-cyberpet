@@ -67,27 +67,33 @@ int setup_room_entities(
   int entity_index = 0;
   bool is_alive = false;
   int setup_result = 0;
+  int target_distance = 4;
 
   for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
     // Select position for entity
+    position_tries = 0;
+    target_distance = 4;
     entity_x = 0;
     entity_y = 0;
     
     while (entity_x == 0 && entity_y == 0) {
-      entity_x = 1 + squirrel_2d(entity_id, position_tries, room_seed) % (MAP_W - 2);
-      entity_y = 1 + squirrel_2d(entity_id, position_tries + 1, room_seed) % (MAP_H - 2);
+      entity_x = 1 + (squirrel_2d(entity_id, position_tries, room_seed) % (MAP_W - 2));
+      entity_y = 1 + (squirrel_2d(entity_id, position_tries + 1, room_seed) % (MAP_H - 2));
 
       // Check that position is not occupied by other entity and is player accessible
       if (
         room_entity_navmap[entity_x][entity_y] == 0
-        || room_exit_navmap[entity_x][entity_y] <= 5
+        || room_exit_navmap[entity_x][entity_y] <= target_distance
         || room_exit_navmap[entity_x][entity_y] == DIJKSTRA_MAX
       ) {
         entity_x = 0;
         entity_y = 0;
       }
 
-      position_tries++;
+      position_tries += 2;
+      if (position_tries % 20 == 0) {
+        target_distance--;
+      }
     }
 
     // Check area entity dead bitmask
