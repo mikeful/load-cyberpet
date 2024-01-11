@@ -100,6 +100,10 @@ int entity_distance = 1;
 int combat_result = 0;
 bool should_combat = false;
 
+bool ai_active = true;
+int buttonState;
+int lastButtonState = HIGH;
+
 String toast_message1 = "";
 unsigned int toast_message_ticks1 = 0;
 String toast_message2 = "";
@@ -147,6 +151,9 @@ void setup() {
   pinMode(VBAT_Read, INPUT); // pin 1
   adcAttachPin(VBAT_Read); // default ADC_11db
   analogReadResolution(12);
+
+  // Setup input
+  pinMode(USR_Button, INPUT);
 
   Serial.begin(115200);
 
@@ -208,6 +215,14 @@ void loop() {
     case STATE_MAINMENU:
       break; // STATE_MAINMENU
     case STATE_ROOM:
+      // Read input
+      buttonState = digitalRead(USR_Button);
+      if (buttonState == LOW && lastButtonState == LOW) {
+        ai_active = !ai_active;
+      } else {
+        lastButtonState = buttonState;
+      }
+
       // Clear effects
       for (int i = 0; i < MAP_W; i++) {
         for (int j = 0; j < MAP_H; j++) {
@@ -322,7 +337,7 @@ void loop() {
       }
 
       // Player movement/action
-      if (counter % 2 == 0) {
+      if (ai_active && counter % 2 == 0) {
         player_prev_hp = entities[ENTITY_ID_PLAYER][ENTITY_HP];
         player_prev_sp = entities[ENTITY_ID_PLAYER][ENTITY_SP];
         player_prev_exp = player_exp;
@@ -394,7 +409,7 @@ void loop() {
       }
 
       // Scan melee combat targets and attack
-      should_combat = true;
+      should_combat = true && ai_active;
       combat_result = 0;
       level_ups = 0;
       for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
@@ -520,7 +535,7 @@ void loop() {
       }
 
       // Entity movement/action
-      if (counter % 2 == 0) {
+      if (ai_active && counter % 2 == 0) {
         for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
           // Update AI state
           int state_update_result = update_ai_state(
