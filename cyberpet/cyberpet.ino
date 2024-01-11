@@ -305,10 +305,10 @@ void loop() {
         area_dir = 0;
         ai_room_dir = 0;
 
-        toast_message1 = " ";
-        toast_message2 = " Lvl" + format_number3(world_tile_data[TILE_LEVEL]);
-        toast_message_ticks1 = 5;
-        toast_message_ticks2 = 5;
+        toast_message1 = "  Room";
+        toast_message2 = " lvl" + format_number3(world_tile_data[TILE_LEVEL]);
+        toast_message_ticks1 = 6;
+        toast_message_ticks2 = 6;
 
         new_room = false;
       }
@@ -528,10 +528,10 @@ void loop() {
         player_diff_exp = player_exp - player_prev_exp;
         player_diff_gold = player_gold - player_prev_gold;
 
-        toast_message1 = "Kill " + format_number2(player_diff_gold) + "G";
-        toast_message2 = " " + format_number4(player_diff_exp) + "XP";
-        toast_message_ticks1 = 3;
-        toast_message_ticks2 = 3;
+        toast_message1 = "  Kill";
+        toast_message2 = format_number3(player_diff_exp) + "XP" + format_number2(player_diff_gold) + "G";
+        toast_message_ticks1 = 4;
+        toast_message_ticks2 = 4;
       }
 
       // Entity movement/action
