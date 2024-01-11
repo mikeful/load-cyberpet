@@ -251,9 +251,9 @@ void loop() {
 
         clear_dijkstra_map(room_exit_navmap);
         if (room_exits & EXIT_N) { merge_dijkstra_maps(room_exit_navmap, room_exitn_navmap); }
-        else if (room_exits & EXIT_S) { merge_dijkstra_maps(room_exit_navmap, room_exits_navmap); }
-        else if (room_exits & EXIT_W) { merge_dijkstra_maps(room_exit_navmap, room_exitw_navmap); }
-        else if (room_exits & EXIT_E) { merge_dijkstra_maps(room_exit_navmap, room_exite_navmap); }
+        if (room_exits & EXIT_S) { merge_dijkstra_maps(room_exit_navmap, room_exits_navmap); }
+        if (room_exits & EXIT_W) { merge_dijkstra_maps(room_exit_navmap, room_exitw_navmap); }
+        if (room_exits & EXIT_E) { merge_dijkstra_maps(room_exit_navmap, room_exite_navmap); }
 
         // Get entity dead bitmask for room
         tile_index = squirrel_4d(world_x, world_y, area_x, area_y, content_seed) % WORLD_DEAD_SIZE;
