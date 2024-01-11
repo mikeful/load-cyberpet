@@ -513,8 +513,8 @@ void loop() {
         player_diff_exp = player_exp - player_prev_exp;
         player_diff_gold = player_gold - player_prev_gold;
 
-        toast_message1 = "Kill+" + format_number2(player_diff_gold) + "G";
-        toast_message2 = "+" + format_number4(player_diff_exp) + "XP";
+        toast_message1 = "Kill " + format_number2(player_diff_gold) + "G";
+        toast_message2 = " " + format_number4(player_diff_exp) + "XP";
         toast_message_ticks1 = 3;
         toast_message_ticks2 = 3;
       }
