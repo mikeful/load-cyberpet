@@ -29,6 +29,7 @@ byte game_state = STATE_START;
 bool player_dead = false;
 bool player_dead_setup = false;
 unsigned int player_level = 1;
+unsigned int player_max_level = 1;
 uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
 int level_ups = 0;
@@ -520,6 +521,10 @@ void loop() {
         entities[ENTITY_ID_PLAYER][ENTITY_LEVEL] = player_level;
         update_entity_stats(entities, ENTITY_ID_PLAYER);
 
+        if (player_level > player_max_level) {
+          player_max_level = player_level;
+        }
+
         toast_message1 = "Level up";
         toast_message2 = "  " + format_number3(player_level);
         toast_message_ticks1 = 10;
@@ -710,7 +715,7 @@ void loop() {
       } else {
         // No message, display skill points
         display1.setCursor(0, 128);
-        display1.println(format_number2(player_level) + " " + format_number4(player_exp));
+        display1.println(format_number3(player_level) + " <" + format_number3(player_max_level));
         //display1.println(format_number4(entities[ENTITY_ID_PLAYER][ENTITY_SP]) + "/" + format_number3(get_entity_max_sp(entities, ENTITY_ID_PLAYER)));
       }
 
