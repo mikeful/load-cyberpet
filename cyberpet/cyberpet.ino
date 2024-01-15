@@ -467,7 +467,7 @@ void loop() {
       // TODO Allow ranged attacks only if player has ranged equipment?
       if (should_combat) {
         for (int entity_id = 1; entity_id < ENTITY_SIZE; entity_id++) {
-          if (entities[entity_id][ENTITY_ALIVE] == 1) {
+          if (should_combat && entities[entity_id][ENTITY_ALIVE] == 1) {
             check_entity_x = (int)entities[entity_id][ENTITY_ROOM_X];
             check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
             entity_distance = room_player_navmap[check_entity_x][check_entity_y];
