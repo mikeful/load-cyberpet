@@ -49,11 +49,13 @@ const byte biome_matrix[9] = {
 #define TREASURE_CAMP 1
 #define TREASURE_DUNGEON 2
 
+#ifndef FACTION_NONE
 #define FACTION_NONE 0
 #define FACTION_CONFLICT 1
 #define FACTION_HUMAN 2
 #define FACTION_MONSTER 3
 #define FACTION_NATURE 4
+#endif
 
 #define TILE_LEVEL 0
 #define TILE_HEIGHT_VALUE 1

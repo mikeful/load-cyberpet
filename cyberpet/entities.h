@@ -65,6 +65,16 @@ const float statpoint_growth_enemy = 1.05;
 const uint64_t hp_base = 50;
 const uint64_t hp_player_bonus = 150;
 
+#define ENTITY_FACTION_HUMAN 0
+#define ENTITY_FACTION_MONSTER 1
+#define ENTITY_FACTION_NATURE 2
+
+const int entity_faction_icon[3][4] = {
+  {332,334,339,337}, // ENTITY_FACTION_HUMAN
+  {343,345,348,349}, // ENTITY_FACTION_MONSTER
+  {310,302,375,356}, // ENTITY_FACTION_NATURE
+};
+
 int setup_player_entity(uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS], unsigned int player_level);
 int setup_room_entities(
   uint64_t entities[ENTITY_SIZE][ENTITY_ATTRS],

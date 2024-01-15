@@ -152,10 +152,15 @@ int setup_entity(
 
   entities[entity_id][ENTITY_ROOM_X] = entity_x;
   entities[entity_id][ENTITY_ROOM_Y] = entity_y;
-  entities[entity_id][ENTITY_ICON] = 347; //174
 
-  // TODO Entity faction
-  // TODO Entity sprite based on faction, type and biome
+  // Entity sprite based on faction
+  // TODO Also based on type and biome
+  int icon_variation = squirrel(entity_id, seed + 338) % 4;
+  int icon_faction = world_tile_data[TILE_FACTION] - 2;
+  if (world_tile_data[TILE_FACTION] <= FACTION_CONFLICT) {
+    icon_faction = squirrel(entity_id, seed + 392) % 3;
+  }
+  entities[entity_id][ENTITY_ICON] = entity_faction_icon[icon_faction][icon_variation];
 
   // Entity combat type
   byte weapon_type = equipments[equipment_id][EQUIP_TYPE];
