@@ -95,6 +95,7 @@ int tile_index = 0;
 unsigned int counter = 1;
 unsigned int counter_at = 0;
 unsigned int tile = 0;
+int tile_pixel = 0;
 unsigned int check_entity_x = 0;
 unsigned int check_entity_y = 0;
 int entity_distance = 1;
@@ -603,19 +604,21 @@ void loop() {
       // Draw room
       for (int i = 0; i < MAP_W; i++) {
         for (int j = 0; j < MAP_H; j++) {
+          tile_pixel = 0;
           if (room_effect_tilemap[i][j] != -1) {
             // Draw effect
             tile = room_effect_tilemap[i][j];
           } else if (room_entity_tilemap[i][j] != -1) {
             // Draw entity
             tile = room_entity_tilemap[i][j];
+            tile_pixel = (((j * 9) + i) + counter) % 2 == 0;
           } else {
             // Draw room tile
             tile = room_tilemap[i][j];
           }
 
           if (tile != -1) {
-            display1.drawBitmap(i * 8, j * 8, tiles[tile], 8, 8, WHITE);
+            display1.drawBitmap(i * 8, (j * 8) - tile_pixel, tiles[tile], 8, 8, WHITE);
           }
         }
       }
