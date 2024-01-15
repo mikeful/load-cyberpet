@@ -463,7 +463,7 @@ int update_ai_state(
 
     case AI_STATE_IDLE:
       // Stand around or patrol, try to detect player in range
-      if (room_player_navmap[entity_x][entity_y] <= 4) {
+      if (room_player_navmap[entity_x][entity_y] <= 3) {
         if (profile == AI_PROFILE_MELEE) { next_state = AI_STATE_MELEE; }
         else if (profile == AI_PROFILE_RANGED) { next_state = AI_STATE_RANGED; }
       }
@@ -633,7 +633,7 @@ int run_ai_state_movement(
     case AI_STATE_FLEE:
       // Move away from player
       if (squirrel(entity_id, seed + 831) % 4 != 0) {
-        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 5, seed);
+        ai_room_dir = get_dijkstra_direction(room_player_navmap, entity_x, entity_y, 4, seed);
 
         if (ai_room_dir == DIR_N) { entity_y--; }
         else if (ai_room_dir == DIR_S) { entity_y++; }
@@ -697,7 +697,7 @@ int run_ai_state_action(
     
     case AI_STATE_RANGED:
       // Try to move next to player for attacks
-      if (player_distance == 2 || player_distance == 3) {
+      if (player_distance == 2) {
         resolve_combat(entities, entity_id, ENTITY_ID_PLAYER, false, room_effect_tilemap, seed);
       }
     break;

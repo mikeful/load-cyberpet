@@ -472,7 +472,7 @@ void loop() {
             check_entity_y = (int)entities[entity_id][ENTITY_ROOM_Y];
             entity_distance = room_player_navmap[check_entity_x][check_entity_y];
 
-            if (entity_distance == 2 || entity_distance == 3) {
+            if (entity_distance == 2) {
               combat_result = resolve_combat(
                 entities,
                 ENTITY_ID_PLAYER,
