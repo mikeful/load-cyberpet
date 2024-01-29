@@ -306,11 +306,33 @@ void loop() {
 
   switch(game_state) {
     case STATE_START:
+      // TODO Load from save
       setup_player_entity(entities, player_level);
-      game_state = STATE_ROOM;
+      game_state = STATE_MAINMENU;
+
+      counter_at = counter + 50;
 
       break; // STATE_START
     case STATE_MAINMENU:
+      // TODO Display logo + help
+      // TODO Equipment selector for the next run
+
+      display1.setCursor(0, 8);
+      display1.println(" Legend ");
+      display1.setCursor(0, 16);
+      display1.println(" of the ");
+      display1.setCursor(0, 24);
+      display1.println("Advnture");
+      display1.setCursor(0, 32);
+      display1.println("  Dude  ");
+
+      display1.drawBitmap(4 * 8, 7 * 8, tiles[entities[ENTITY_ID_PLAYER][ENTITY_ICON]], 8, 8, WHITE);
+
+      if (counter >= counter_at) {
+        // Start menu screen timer ran out, clear stuff and start again
+        game_state = STATE_ROOM;
+      }
+
       break; // STATE_MAINMENU
     case STATE_ROOM:
       // Run player character profile timer
