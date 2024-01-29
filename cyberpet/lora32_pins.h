@@ -1,3 +1,7 @@
+// This work by Digital Concepts is licensed under a Creative Commons Attribution-Noncommercial-Share Alike 2.5 Australia License. Permissions beyond the scope of this license may be available at info@digitalconcepts.net.au.
+
+// https://digitalconcepts.net.au/arduino/index.php?op=ESP32#wl32v3
+
 #define Builtin_LED 35
 
 #define GPIO0 0

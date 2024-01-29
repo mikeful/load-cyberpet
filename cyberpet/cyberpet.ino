@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "lora32_pins.h"
+#include "battery.h"
 
 #include "toolbox.h"
 #include "player.h"
@@ -61,12 +62,14 @@ unsigned int room_y = 7;
 int ai_room_dir = 0;
 byte last_door = 0;
 
+// Room map
 bool new_room = true;
 byte room_wallmap[MAP_W][MAP_H];
 int room_tilemap[MAP_W][MAP_H];
 int room_entity_tilemap[MAP_W][MAP_H];
 int room_effect_tilemap[MAP_W][MAP_H];
 
+// Player/entity navigation maps
 byte room_exits = 0;
 byte area_exits = 0;
 int room_exit_navmap[MAP_W][MAP_H];
@@ -82,9 +85,11 @@ int room_entity_idmap[MAP_W][MAP_H];
 bool update_player_navmap = true;
 bool update_entity_navmap = false; // Room generation updates at start
 
+// World map
 int noisemap[MAP_W][MAP_H];
 int world_tile_data[15];
 
+// Entity dead status cache
 #define WORLD_DEAD_SIZE 1000
 byte world_tile_dead[WORLD_DEAD_SIZE];
 byte world_tile_dead_ttl[WORLD_DEAD_SIZE];
@@ -92,6 +97,7 @@ byte world_tile_dead_value = 0;
 byte entity_index = 0;
 int tile_index = 0;
 
+// Misc helper variables
 unsigned int counter = 1;
 unsigned int counter_at = 0;
 unsigned int tile = 0;
@@ -105,29 +111,22 @@ bool should_combat = false;
 bool ai_active = true;
 int buttonState;
 int lastButtonState = HIGH;
+int button_pin;
+int button_value;
+int lastButtonState = BUTTON_UP;
+int led_pin;
 
+// Short UI message system
 String toast_message1 = "";
 unsigned int toast_message_ticks1 = 0;
 String toast_message2 = "";
 unsigned int toast_message_ticks2 = 0;
 
 // Battery stuff
-int volt = 0;
-int volt2 = 0;
-int progress = 0;
-float XS = 0.0025;
-// ADC resolution
-const int resolution = 12;
-const int adcMax = pow(2, resolution) - 1;
-const float adcMaxVoltage = 3.3;
-// On-board voltage divider
-const int R1 = 390;
-const int R2 = 100;
-// Calibration measurements
-const float measuredVoltage = 4.2;
-const float reportedVoltage = 4.095;
-// Calibration factor
-const float batFactor = (adcMaxVoltage / adcMax) * ((R1 + R2)/(float)R2) * (measuredVoltage / reportedVoltage);
+int analogValue = 0;
+float floatVoltage = 4.2;
+float floatVoltageSlow = 4.2;
+int voltage = 4200;
 
 Adafruit_SSD1306 display1(128, 64, &Wire, 21, 500000UL);
 
@@ -184,26 +183,29 @@ void loop() {
 
   if (counter % 3 == 0) {
     // Battery stuff
-    digitalWrite(ADC_Ctrl, LOW);
-    delay(10);
-    int analogValue = analogRead(VBAT_Read);
-    digitalWrite(ADC_Ctrl, HIGH);
+    analogValue = read_battery();
+    floatVoltage = batFactor * (float)analogValue;
+    floatVoltageSlow = (floatVoltageSlow * 0.98) + (floatVoltage * 0.02);
 
-    float floatVoltage = batFactor * (float)analogValue;
-    uint16_t voltage = (int)(floatVoltage * 1000.0);
+    voltage = (int)(floatVoltageSlow * 1000.0);
     progress = map(voltage, 2200, 4200, 0, 100);
 
-    // Mess action random seed with battery value
+    // Mess action random seed with jittering battery value
     action_seed += (unsigned int)analogValue;
-  }
 
-  /*
-  display1->drawProgressBar(1, 64, 62, 10, progress);
-  display1->setTextAlignment(TEXT_ALIGN_CENTER);
-  display1->drawString(32, 15, String(progress) + "%");
-  display1->setTextAlignment(TEXT_ALIGN_CENTER);
-  display1->drawString(32, 5, String(floatVoltage) + "V");
-  */
+    // Display low battery warnings
+    if (progress == 20) {
+      toast_message1 = "Bat " + String(progress) + "%";
+      toast_message2 = "Charge";
+      toast_message_ticks1 = 6;
+      toast_message_ticks2 = 6;
+    } else if (progress <= 15) {
+      toast_message1 = "Bat " + String(progress) + "%";
+      toast_message2 = "Critical";
+      toast_message_ticks1 = 6;
+      toast_message_ticks2 = 6;
+    }
+  }
 
   // Clear the display
   display1.clearDisplay();
