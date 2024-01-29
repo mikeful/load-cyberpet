@@ -127,8 +127,8 @@ int setup_entity(
   int equipment_id = 1 + (squirrel(entity_id, seed) % 23); // TODO define max item count
   int equipment_tier = 0;
 
-  bool is_elite = false; // +3 levels, gold+loot
-  bool is_boss = false; // +5 levels, gold+loot
+  bool is_elite = false; // TODO +3 levels/tier, gold+loot
+  bool is_boss = false; // TODO +5 levels/tier, gold+loot
 
   entities[entity_id][ENTITY_ITEM1] = (uint64_t)equipment_id;
   entities[entity_id][ENTITY_ITEM1_TIER] = (uint64_t)equipment_tier;
@@ -158,6 +158,7 @@ int setup_entity(
   int icon_variation = squirrel(entity_id, seed + 338) % 4;
   int icon_faction = world_tile_data[TILE_FACTION] - 2;
   if (world_tile_data[TILE_FACTION] <= FACTION_CONFLICT) {
+    // World tile in conflict, select random faction
     icon_faction = squirrel(entity_id, seed + 392) % 3;
   }
   entities[entity_id][ENTITY_ICON] = entity_faction_icon[icon_faction][icon_variation];
@@ -797,11 +798,11 @@ int resolve_combat(
 
   effect_tilemap[defender_x][defender_y] = effect_tile;
 
-  Serial.println(String(attacker_id) + "->" + String(defender_id) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
+  //Serial.println(String(attacker_id) + "->" + String(defender_id) + " Attacker hits " + String(damage) + "/" + String(entities[defender_id][ENTITY_HP]) + ", SP " + String(sp_change));
 
   if (modify_entity_hp(entities, defender_id, -(long long)damage) == 0) {
     // Defender died from attack
-    Serial.println(String(attacker_id) + "->" + String(defender_id) + " Combat end, defender died");
+    //Serial.println(String(attacker_id) + "->" + String(defender_id) + " Combat end, defender died");
     return 1;
   } else {
     sp_change = defender_sp_gain_damage_in * defender_max_sp_fraction;

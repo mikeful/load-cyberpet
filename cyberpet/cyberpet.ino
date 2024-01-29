@@ -23,18 +23,26 @@
 #define STATE_GAMEMENU 4
 #define STATE_DEATH 5
 
+// Game state
 unsigned int content_seed = 0; // Determines world content, keep same
 unsigned int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
 byte game_state = STATE_START;
 
-bool player_dead = false;
-bool player_dead_setup = false;
+// Player character
+int world_time = 0;
 unsigned int player_level = 1;
 unsigned int player_max_level = 1;
 uint64_t player_exp = 0;
 unsigned int player_exp_multiplier = 1;
 int level_ups = 0;
 uint64_t player_gold = 0;
+
+bool player_dead = false;
+bool player_dead_setup = false;
+
+byte player_profile = PLAYER_PROFILE_NONE;
+int player_profile_ticks = 0;
+int target_distance = 1;
 
 uint64_t player_prev_hp = 0;
 long long player_diff_hp = 0;
@@ -107,6 +115,7 @@ unsigned int check_entity_y = 0;
 int entity_distance = 1;
 int combat_result = 0;
 bool should_combat = false;
+int equipment_id = 0;
 
 bool ai_active = true;
 int buttonState;
@@ -128,13 +137,21 @@ float floatVoltage = 4.2;
 float floatVoltageSlow = 4.2;
 int voltage = 4200;
 
+// Chip id
+unsigned int chip_id = 0;
+
+// Display
 Adafruit_SSD1306 display1(128, 64, &Wire, 21, 500000UL);
 
 void setup() {
   // Setup display
   Wire.begin(17, 18);
   display1.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display1.setRotation(1);
+
+  // Setup screen rotation
+  // Only vertical for now, horizontal support needs code changes to room generators
+  //display1.setRotation(1); // 90 degrees, USB on bottom
+  display1.setRotation(3); // 270 degrees, USB on top
 
   display1.clearDisplay();
   display1.display();
@@ -145,18 +162,21 @@ void setup() {
   display1.setTextColor(SSD1306_WHITE);
   display1.setCursor(0, 0);
   display1.setTextWrap(false);
-  //display1.cp437(true);
 
   // Setup battery
-  pinMode(ADC_Ctrl, OUTPUT); // pin 37
-  pinMode(VBAT_Read, INPUT); // pin 1
-  adcAttachPin(VBAT_Read); // default ADC_11db
-  analogReadResolution(12);
+  setup_battery();
 
   // Setup input
   pinMode(USR_Button, INPUT);
 
   Serial.begin(115200);
+
+  // Read MAC as chip id and use in content seed
+  // https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/ChipID/GetChipID/GetChipID.ino
+  for(int i = 0; i < 17; i = i + 8) {
+	  chip_id |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+	}
+  content_seed += chip_id;
 
   // Setup game
   for (int i = 0; i < MAP_W; i++) {
@@ -249,7 +269,7 @@ void loop() {
       // Setup new room if entered
       if (new_room) {
         // Get current world tile and area
-        get_world_tile(world_tile_data, world_x, world_y, 0, content_seed);
+        get_world_tile(world_tile_data, world_x, world_y, world_time, content_seed);
 
         // Add area exits to room exits on edges
         area_exits = get_area_exits(world_x, world_y);
@@ -753,6 +773,9 @@ void loop() {
       break; // STATE_GAMEMENU
     case STATE_DEATH:
       if (player_dead_setup == false) {
+        // Advance world clock
+        world_time++;
+
         // Run one time setup for death screen
         player_level = 1;
         player_exp = 0;
