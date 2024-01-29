@@ -23,6 +23,11 @@
 #define STATE_GAMEMENU 4
 #define STATE_DEATH 5
 
+#define PLAYER_PROFILE_NONE 0 // No preference
+#define PLAYER_PROFILE_MELEE 1 // Prefer melee range
+#define PLAYER_PROFILE_RANGED 2 // Perfer ranged range
+#define PLAYER_PROFILE_FLEE 3 // Move to previous room
+
 // Game state
 unsigned int content_seed = 0; // Determines world content, keep same
 unsigned int action_seed = 0; // Determines entity actions/dice/etc, mess as often as possible
@@ -117,9 +122,34 @@ int combat_result = 0;
 bool should_combat = false;
 int equipment_id = 0;
 
+// Button/input system
+#define BUTTON_SIZE 5
+#define BUTTON_PIN 0
+#define BUTTON_LED_PIN 1
+#define BUTTON_STATE 2
+#define BUTTON_LAST_STATE 3
+#define BUTTON_CHANGED 4
+
+#define BTN_USR 0
+#define BTN_EQUIP 1
+#define BTN_MAGIC 2
+#define BTN_ITEM 3
+#define BTN_FLEE 4
+
+#define BUTTON_UP LOW
+#define BUTTON_DOWN HIGH
+
+int input_state[BUTTON_SIZE][5] = {
+  {-1, -1, BUTTON_UP, BUTTON_UP, 0}, // U - BTN_USR
+  {GPIO6, GPIO7, BUTTON_UP, BUTTON_UP, 0}, // A - BTN_EQUIP
+  {GPIO42, GPIO41, BUTTON_UP, BUTTON_UP, 0}, // B - BTN_MAGIC
+  {GPIO4, GPIO5, BUTTON_UP, BUTTON_UP, 0}, // C - BTN_ITEM
+  {GPIO40, GPIO39, BUTTON_UP, BUTTON_UP, 0}, // D - BTN_FLEE
+};
+unsigned long input_state_time[BUTTON_SIZE];
+const unsigned long debounce_delay = 5; // ms
+
 bool ai_active = true;
-int buttonState;
-int lastButtonState = HIGH;
 int button_pin;
 int button_value;
 int lastButtonState = BUTTON_UP;
@@ -166,8 +196,18 @@ void setup() {
   // Setup battery
   setup_battery();
 
-  // Setup input
-  pinMode(USR_Button, INPUT);
+  // Setup input system
+  for (int i = 0; i < BUTTON_SIZE; i++) {
+    if (input_state[i][BUTTON_PIN] != -1) {
+      pinMode(input_state[i][BUTTON_PIN], INPUT);
+    }
+
+    if (input_state[i][BUTTON_LED_PIN] != -1) {
+      pinMode(input_state[i][BUTTON_LED_PIN], OUTPUT);
+    }
+
+    input_state_time[i] = 0;
+  }
 
   Serial.begin(115200);
 
@@ -230,6 +270,40 @@ void loop() {
   // Clear the display
   display1.clearDisplay();
 
+  // Read input
+  for (int i = 0; i < BUTTON_SIZE; i++) {
+    button_pin = input_state[i][BUTTON_PIN];
+    led_pin = input_state[i][BUTTON_LED_PIN];
+
+    if (button_pin != -1) {
+      digitalWrite(led_pin, LOW);
+    }
+
+    if (button_pin != -1) {
+      input_state[i][BUTTON_CHANGED] = 0;
+      button_value = digitalRead(button_pin);
+
+      if (button_value != input_state[i][BUTTON_LAST_STATE]) {
+        // Reset debounce timer
+        input_state_time[i] = millis();
+      }
+
+      // Update value if debounce delay has passed with same value
+      if ((millis() - input_state_time[i]) > debounce_delay) {
+        if (button_value != input_state[i][BUTTON_STATE]) {
+          input_state[i][BUTTON_STATE] = button_value;
+          input_state[i][BUTTON_CHANGED] = 1;
+
+          if (button_pin != -1 && button_value == LOW) {
+            digitalWrite(led_pin, HIGH);
+          }
+        }
+      }
+
+      input_state[i][BUTTON_LAST_STATE] = button_value;
+    }
+  }
+
   switch(game_state) {
     case STATE_START:
       setup_player_entity(entities, player_level);
@@ -239,12 +313,45 @@ void loop() {
     case STATE_MAINMENU:
       break; // STATE_MAINMENU
     case STATE_ROOM:
-      // Read input
-      buttonState = digitalRead(USR_Button);
-      if (buttonState == LOW && lastButtonState == LOW) {
-        ai_active = !ai_active;
-      } else {
-        lastButtonState = buttonState;
+      // Run player character profile timer
+      if (player_profile_ticks > 0) {
+        player_profile_ticks--;
+
+        if (player_profile_ticks == 0) {
+          player_profile = PLAYER_PROFILE_NONE;
+        }
+      }
+
+      // TODO Handle commands from input
+      if (input_state[BTN_EQUIP][BUTTON_CHANGED] == 1 && input_state[BTN_EQUIP][BUTTON_STATE] == BUTTON_DOWN) {
+        player_profile = PLAYER_PROFILE_MELEE;
+        player_profile_ticks = 600;
+
+        toast_message1 = "Command";
+        toast_message2 = "melee";
+        toast_message_ticks1 = 6;
+        toast_message_ticks2 = 6;
+      }
+      if (input_state[BTN_MAGIC][BUTTON_CHANGED] == 1 && input_state[BTN_MAGIC][BUTTON_STATE] == BUTTON_DOWN) {
+        player_profile = PLAYER_PROFILE_RANGED;
+        player_profile_ticks = 600;
+        
+        toast_message1 = "Command";
+        toast_message2 = "ranged";
+        toast_message_ticks1 = 6;
+        toast_message_ticks2 = 6;
+      }
+      if (input_state[BTN_ITEM][BUTTON_CHANGED] == 1 && input_state[BTN_ITEM][BUTTON_STATE] == BUTTON_DOWN) {
+        toast_message1 = "Command";
+        toast_message2 = "item";
+        toast_message_ticks1 = 6;
+        toast_message_ticks2 = 6;
+      }
+      if (input_state[BTN_FLEE][BUTTON_CHANGED] == 1 && input_state[BTN_FLEE][BUTTON_STATE] == BUTTON_DOWN) {
+        toast_message1 = "Command";
+        toast_message2 = "flee";
+        toast_message_ticks1 = 6;
+        toast_message_ticks2 = 6;
       }
 
       // Clear effects
@@ -385,6 +492,32 @@ void loop() {
         }
 
         // Navigate player in current room
+        target_distance = 1;
+        if (player_profile == PLAYER_PROFILE_NONE) {
+          // No profile active, select based on equipment
+          equipment_id = entities[ENTITY_ID_PLAYER][ENTITY_ITEM1];
+
+          switch(equipments[equipment_id][EQUIP_TYPE]) {
+            case EQUIP_TYPE_UNARMED:
+            case EQUIP_TYPE_WEAPON:
+              target_distance = 2;
+            break;
+            case EQUIP_TYPE_RANGED:
+              target_distance = 2;
+            break;
+            case EQUIP_TYPE_MAGIC:
+              if (squirrel(ENTITY_ID_PLAYER, action_seed + counter + 49) % 3 == 0) {
+                target_distance = 1;
+              } else {
+                target_distance = 2;
+              }
+            break;
+          }
+        } else if (player_profile == PLAYER_PROFILE_RANGED) {
+          // Ranged profile active, stay at distance
+          target_distance = 2;
+        }
+        
         ai_room_dir = 0;
         if ( 
           room_entity_navmap[4][0] < DIJKSTRA_MAX
@@ -394,7 +527,7 @@ void loop() {
         ) {
           if (entities[ENTITY_ID_PLAYER][ENTITY_HP] > 2 * (get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 3)) {
             // Entities in room, try to visit them
-            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, 1, action_seed + counter);
+            ai_room_dir = get_dijkstra_direction(room_entity_navmap, room_x, room_y, target_distance, action_seed + counter);
           } else if (last_door != 0 && entities[ENTITY_ID_PLAYER][ENTITY_HP] < get_entity_max_hp(entities, ENTITY_ID_PLAYER) / 5) {
             // Entities in room but really health low, flee to previous room
             if (last_door == DIR_N) { ai_room_dir = get_dijkstra_direction(room_exitn_navmap, room_x, room_y, action_seed + counter); }
