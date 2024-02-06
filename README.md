@@ -15,7 +15,7 @@ This is entry for [Cyberdeck Cafe](https://cyberdeck.cafe/) cyberpet contest of 
 6. If you got personal version of the pack, you need get the font separately from here https://dennisbusch-de.itch.io/0xdbs-medievalish-chonker-8x8-1bpp-bitmap-font.
 7. Next we'll convert graphics pack tilesheet for Arduino. Install Python dependencies in `tileset/` directory (Python virtual environment/venv recommended). Copy `0xDB_GASP_8x8_1bpp_RPG_icons_v18_packed_1bpp.png` and `0xDB_GASP_8x8_1bpp_RPG_icons_v18_packed.csv` files to same directory (change version number if there is update) and run `python convert.py > tileset.h`.
 8. Check generated file against `tileset/tileset-example.h`. If starts of the files look same, copy `tileset.h` to `cyberpet/` directory.
-9. Convert personal version of the font: copy `0xDB_medievalish_chonker_8x8_1bpp_bmp_font_packed_1bpp.png` and `0xDB_medievalish_chonker_8x8_1bpp_bmp_font_packed.csv` files to same directory and run `python convert_font.py > medievalish_chonker_mono.h`.
+9. Convert personal version of the font: copy `0xDB_medievalish_chonker_8x8_1bpp_bmp_font_packed_1bpp.png` and `0xDB_medievalish_chonker_8x8_1bpp_bmp_font_packed.csv` files to `font/` directory and run `python convert_font.py > medievalish_chonker_mono.h`.
 10. Check generated file against `font/medievalish_chonker_mono-example.h`. If starts of the files look same, rename the file as `medievalish_chonker_mono.h` and copy it into to `cyberpet/` directory.
 11. Open the project `cyberpet/` directory in Arduino IDE. Select 80Mhz CPU frequency to save bit of battery and select LoRa settings for your region.
 12. Hit upload and hope for the best. If everything worked, you should see adventure dude running around on you devboard screen.
