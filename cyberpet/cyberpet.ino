@@ -30,6 +30,7 @@
 #define PLAYER_PROFILE_FLEE 3 // Move to previous room
 
 Preferences preferences;
+unsigned int save_version = 0;
 
 // Game state
 unsigned int content_seed = 0; // Determines world content, keep same
@@ -223,6 +224,7 @@ void setup() {
 
   // Read save data
   preferences.begin("cyberpet", true);
+  save_version = preferences.getUInt("save_version", 0);
   world_time = preferences.getInt("world_t", 0);
   player_level = preferences.getUInt("plr_l", 1);
   player_max_level = preferences.getUInt("plr_max_l", 1);
@@ -419,6 +421,7 @@ void loop() {
       if (new_room) {
         // Write save data
         preferences.begin("cyberpet", false);
+        preferences.getUInt("save_version", save_version);
         preferences.putInt("world_t", world_time);
         preferences.putUInt("plr_l", player_level);
         preferences.putUInt("plr_max_l", player_max_level);
