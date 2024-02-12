@@ -421,7 +421,7 @@ void loop() {
       if (new_room) {
         // Write save data
         preferences.begin("cyberpet", false);
-        preferences.getUInt("save_version", save_version);
+        preferences.putUInt("save_version", save_version);
         preferences.putInt("world_t", world_time);
         preferences.putUInt("plr_l", player_level);
         preferences.putUInt("plr_max_l", player_max_level);
