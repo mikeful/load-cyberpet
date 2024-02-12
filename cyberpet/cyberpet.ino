@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Preferences.h>
 #include "lora32_pins.h"
 #include "battery.h"
 
@@ -27,6 +28,8 @@
 #define PLAYER_PROFILE_MELEE 1 // Prefer melee range
 #define PLAYER_PROFILE_RANGED 2 // Perfer ranged range
 #define PLAYER_PROFILE_FLEE 3 // Move to previous room
+
+Preferences preferences;
 
 // Game state
 unsigned int content_seed = 0; // Determines world content, keep same
@@ -218,6 +221,23 @@ void setup() {
 	}
   content_seed += chip_id;
 
+  // Read save data
+  preferences.begin("cyberpet", true);
+  world_time = preferences.getInt("world_t", 0);
+  player_level = preferences.getUInt("plr_l", 1);
+  player_max_level = preferences.getUInt("plr_max_l", 1);
+  player_exp = preferences.getULong64("plr_xp", 0);
+  player_exp_multiplier = preferences.getUInt("plr_xp_x", 1);
+  level_ups = preferences.getInt("level_ups", 0);
+  player_gold = preferences.getULong64("player_gp", 0);
+  world_x = preferences.getInt("world_x", 0);
+  world_y = preferences.getInt("world_y", 0);
+  area_x = preferences.getInt("area_x", 0);
+  area_y = preferences.getInt("area_y", 0);
+  room_x = preferences.getUInt("room_x", 4);
+  room_y = preferences.getUInt("room_y", 7);
+  preferences.end();
+
   // Setup game
   for (int i = 0; i < MAP_W; i++) {
     for (int j = 0; j < MAP_H; j++) {
@@ -397,6 +417,23 @@ void loop() {
 
       // Setup new room if entered
       if (new_room) {
+        // Write save data
+        preferences.begin("cyberpet", false);
+        preferences.putInt("world_t", world_time);
+        preferences.putUInt("plr_l", player_level);
+        preferences.putUInt("plr_max_l", player_max_level);
+        preferences.putULong64("plr_xp", player_exp);
+        preferences.putUInt("plr_xp_x", player_exp_multiplier);
+        preferences.putInt("level_ups", level_ups);
+        preferences.putULong64("player_gp", player_gold);
+        preferences.putInt("world_x", world_x);
+        preferences.putInt("world_y", world_y);
+        preferences.putInt("area_x", area_x);
+        preferences.putInt("area_y", area_y);
+        preferences.putUInt("room_x", room_x);
+        preferences.putUInt("room_y", room_y);
+        preferences.end();
+
         // Get current world tile and area
         get_world_tile(world_tile_data, world_x, world_y, world_time, content_seed);
 
